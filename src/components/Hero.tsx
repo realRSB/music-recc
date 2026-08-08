@@ -1,8 +1,27 @@
 import { useEffect, useRef, useState } from "react";
-import RevealLayer from "./RevealLayer";
-import { BG_IMAGE_1, BG_IMAGE_2 } from "../constants";
+import { ArrowRight, Loader2 } from "lucide-react";
+import RevealLayer from "./RevealLayer.tsx";
+import { BG_IMAGE_1, BG_IMAGE_2, RANGES } from "../constants.ts";
 
-export default function Hero() {
+type HeroProps = {
+  source: string;
+  range: string;
+  onChange: (patch: { source?: string; range?: string }) => void;
+  onSubmit: (event: React.FormEvent) => void;
+  loading: boolean;
+  canGenerate: boolean;
+  spotifyConfigured: boolean;
+};
+
+export default function Hero({
+  source,
+  range,
+  onChange,
+  onSubmit,
+  loading,
+  canGenerate,
+  spotifyConfigured,
+}: HeroProps) {
   const mouse = useRef({ x: -999, y: -999 });
   const smooth = useRef({ x: -999, y: -999 });
   const rafRef = useRef<number>(0);
@@ -54,13 +73,13 @@ export default function Hero() {
             className="block font-playfair italic font-normal text-5xl sm:text-7xl md:text-8xl hero-anim hero-reveal"
             style={{ letterSpacing: "-0.05em", animationDelay: "0.25s" }}
           >
-            Layers hold
+            Find the songs
           </span>
           <span
             className="block font-normal text-5xl sm:text-7xl md:text-8xl -mt-1 hero-anim hero-reveal"
             style={{ letterSpacing: "-0.08em", animationDelay: "0.42s" }}
           >
-            tales of time
+            past your rotation
           </span>
         </h1>
       </div>
@@ -70,22 +89,78 @@ export default function Hero() {
         style={{ animationDelay: "0.7s" }}
       >
         <p className="text-sm text-white/80 leading-relaxed">
-          Every layer of sediment records a chapter of our planet, from ancient seabeds to drifting
-          ash, layered across millions of years beneath us.
+          Every playlist is a map of what you already love. We read its artists, genres, and era,
+          then look just past the edges of it.
         </p>
       </div>
 
+      {/* docs.md: the first screen starts the actual recommendation workflow,
+          so the real source input lives here rather than a marketing CTA. */}
       <div
-        className="absolute bottom-10 sm:bottom-24 left-5 right-5 sm:left-auto sm:right-10 md:right-14 max-w-full sm:max-w-[260px] flex flex-col items-start gap-4 sm:gap-5 z-50 hero-anim hero-fade"
+        className="absolute bottom-10 sm:bottom-20 left-5 right-5 sm:left-auto sm:right-10 md:right-14 max-w-full sm:max-w-[380px] flex flex-col items-start gap-4 z-50 hero-anim hero-fade"
         style={{ animationDelay: "0.85s" }}
       >
-        <p className="text-xs sm:text-sm text-white/80 leading-relaxed">
-          Our interactive maps let you peel back the crust to trace how stones, fossils, and deep
-          time combine to shape the ground beneath your feet.
-        </p>
-        <button className="bg-[#e8702a] hover:bg-[#d2611f] text-white text-sm font-medium px-7 py-3 rounded-full transition-all hover:scale-[1.03] active:scale-95 hover:shadow-lg hover:shadow-[#e8702a]/30">
-          Start Digging
-        </button>
+        <form onSubmit={onSubmit} className="w-full flex flex-col gap-3">
+          <label htmlFor="source" className="text-xs font-medium text-white/70 tracking-wide">
+            Start from a playlist or song
+          </label>
+
+          <input
+            id="source"
+            name="source"
+            type="text"
+            autoComplete="off"
+            spellCheck={false}
+            value={source}
+            onChange={(event) => onChange({ source: event.target.value })}
+            placeholder="Playlist link, track link, or song name"
+            className="w-full bg-white/10 backdrop-blur-md border border-white/25 rounded-full px-5 py-3 text-sm text-white placeholder:text-white/50 outline-none focus:border-[#e8702a] focus:ring-2 focus:ring-[#e8702a]/40 transition-colors"
+          />
+
+          <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="How far out">
+            {RANGES.map((option) => (
+              <button
+                key={option}
+                type="button"
+                role="radio"
+                aria-checked={range === option}
+                onClick={() => onChange({ range: option })}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                  range === option
+                    ? "bg-white text-gray-900 border-white"
+                    : "bg-white/10 text-white/80 border-white/25 hover:bg-white/20 hover:text-white"
+                }`}
+              >
+                {option}
+              </button>
+            ))}
+          </div>
+
+          <button
+            type="submit"
+            disabled={!canGenerate}
+            className="inline-flex items-center gap-2 bg-[#e8702a] hover:bg-[#d2611f] text-white text-sm font-medium px-7 py-3 rounded-full transition-all hover:scale-[1.03] active:scale-95 hover:shadow-lg hover:shadow-[#e8702a]/30 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 self-start"
+          >
+            {loading ? (
+              <>
+                <Loader2 size={16} aria-hidden="true" className="animate-spin" />
+                reading the room…
+              </>
+            ) : (
+              <>
+                build horizon playlist
+                <ArrowRight size={16} aria-hidden="true" />
+              </>
+            )}
+          </button>
+
+          {!spotifyConfigured ? (
+            <p className="text-xs text-white/60 leading-relaxed">
+              Add Spotify credentials from <code className="text-white/80">.env.example</code> to
+              run live recommendations.
+            </p>
+          ) : null}
+        </form>
       </div>
     </section>
   );
