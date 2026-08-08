@@ -87,6 +87,37 @@ export async function getCurrentUser(accessToken) {
   return spotifyRequest("/me", { accessToken });
 }
 
+export async function getCurrentUserPlaylists(accessToken) {
+  const playlists = [];
+  let offset = 0;
+  let next = true;
+
+  while (next && playlists.length < 50) {
+    const page = await spotifyRequest("/me/playlists", {
+      accessToken,
+      query: {
+        limit: 10,
+        offset,
+      },
+    });
+
+    playlists.push(...(page.items || []).filter(Boolean));
+    next = page.next;
+    offset += 10;
+  }
+
+  return playlists.map((playlist) => ({
+    id: playlist.id,
+    name: playlist.name,
+    description: playlist.description,
+    uri: playlist.uri,
+    url: playlist.external_urls?.spotify,
+    image: playlist.images?.[0]?.url,
+    owner: playlist.owner?.display_name,
+    trackTotal: playlist.tracks?.total || playlist.items?.total || 0,
+  }));
+}
+
 export async function getTrack(trackId, accessToken) {
   return spotifyRequest(`/tracks/${trackId}`, { accessToken });
 }
