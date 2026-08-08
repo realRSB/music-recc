@@ -217,16 +217,33 @@ async function spotifyRequest(path, { method = "GET", accessToken, query, body }
 
 async function parseSpotifyResponse(response) {
   const text = await response.text();
-  const data = text ? JSON.parse(text) : {};
+  const data = parseResponseBody(text);
 
   if (!response.ok) {
-    const message = data.error?.message || data.error_description || "spotify request failed";
+    const message =
+      data.error?.message ||
+      data.error_description ||
+      data.message ||
+      data.text ||
+      "spotify request failed";
     const error = new Error(message);
     error.status = response.status;
     throw error;
   }
 
   return data;
+}
+
+function parseResponseBody(text) {
+  if (!text) {
+    return {};
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    return { text };
+  }
 }
 
 function normalizeTokenResponse(data, fallbackRefreshToken) {

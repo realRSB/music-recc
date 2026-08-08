@@ -53,8 +53,16 @@ export function App() {
   async function loadSession() {
     try {
       const [configResponse, meResponse] = await Promise.all([getConfig(), getMe()]);
-      setConfig(configResponse);
+
+      setConfig({
+        ...configResponse,
+        authenticated: meResponse.authenticated,
+      });
       setUser(meResponse.user);
+
+      if (meResponse.error) {
+        setError(meResponse.error);
+      }
     } catch (loadError) {
       setError(loadError.message);
     }
