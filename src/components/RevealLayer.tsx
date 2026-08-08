@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { SPOTLIGHT_R } from "../constants";
+import { SPOTLIGHT_R } from "../constants.ts";
 
 type RevealLayerProps = {
   image: string;
