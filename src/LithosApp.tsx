@@ -1,0 +1,11 @@
+import Nav from "./components/Nav";
+import Hero from "./components/Hero";
+
+export default function LithosApp() {
+  return (
+    <div className="min-h-screen bg-white tracking-[-0.02em]" style={{ fontFamily: "'Inter', sans-serif" }}>
+      <Nav />
+      <Hero />
+    </div>
+  );
+}
