@@ -825,7 +825,19 @@ h1 {
   box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.12);
 }
 
-/* Concentric grooves — reads as a record without shipping an image. */
+.track-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Concentric grooves — reads as a record without shipping an image. Hidden
+   once real album art loads. */
+.track-art:has(img)::before {
+  display: none;
+}
+
 .track-art::before {
   content: "";
   position: absolute;
@@ -958,26 +970,73 @@ h1 {
   height: 11px;
 }
 
-/* --------------------------------------------------------------- empty */
+/* --------------------------------------------------- notices and banners */
 
-.empty {
-  display: grid;
-  justify-items: center;
-  text-align: center;
+.notice,
+.banner {
+  display: flex;
+  align-items: flex-start;
   gap: var(--s-3);
-  padding: var(--s-8) var(--s-5);
-  color: var(--text-faint);
-}
-
-.empty h3 {
-  font-size: var(--step-1);
-  color: var(--text);
-}
-
-.empty p {
-  max-width: 38ch;
-  color: var(--text-muted);
+  padding: var(--s-3) var(--s-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
   font-size: var(--step--1);
+  line-height: 1.5;
+}
+
+.notice {
+  background: var(--cool-soft);
+  border-color: rgb(110 139 255 / 0.3);
+  color: var(--text-muted);
+}
+
+.notice svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--cool);
+}
+
+.notice code {
+  padding: 1px 5px;
+  border-radius: 5px;
+  background: rgb(0 0 0 / 0.3);
+  color: var(--text);
+  font-size: 0.9em;
+}
+
+.banner-error {
+  background: rgb(239 68 68 / 0.12);
+  border-color: rgb(239 68 68 / 0.35);
+  color: #ffb4ab;
+}
+
+.banner-ok {
+  background: rgb(52 211 153 / 0.12);
+  border-color: rgb(52 211 153 / 0.32);
+  color: #8ce0bd;
+  text-decoration: none;
+  transition: background var(--dur-fast) var(--ease);
+}
+
+.banner-ok:hover {
+  background: rgb(52 211 153 / 0.2);
+}
+
+.banner svg {
+  flex: none;
+  margin-top: 2px;
+}
+
+.tag-example {
+  background: var(--ember-glow);
+  color: var(--ember-lift);
+}
+
+.example-note {
+  padding-inline: var(--s-1);
+  color: var(--text-faint);
+  font-size: var(--step--1);
+  line-height: 1.5;
 }
 
 .spin {
