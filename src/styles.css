@@ -342,6 +342,12 @@ select {
   background: linear-gradient(135deg, #f2c46d, #397f83);
 }
 
+.track-art-fallback {
+  display: grid;
+  place-items: center;
+  color: rgba(255, 255, 255, 0.9);
+}
+
 .track-copy {
   min-width: 0;
 }
