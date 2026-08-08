@@ -138,6 +138,14 @@ Create a minimal usable MVP:
 4. Recommendation results page with explanations.
 5. Save-to-Spotify playlist flow when authenticated.
 
+Current implementation notes:
+
+- The app uses an Express server in `server/` and a React/Vite client in `src/`.
+- The server owns Spotify credentials, OAuth token exchange, session cookies, recommendation generation, and playlist creation.
+- The frontend is split into `src/App.jsx`, `src/api/innerHorizons.js`, `src/components/`, and `src/styles.css`.
+- Use `.env.example` as the required Spotify credential template.
+- Local dev runs through `npm run dev`, which serves both API routes and the Vite app at `http://127.0.0.1:5173`.
+
 ## Repo workflow rules
 
 Use these rules for agents working on this repo:
@@ -151,4 +159,3 @@ Use these rules for agents working on this repo:
 - Update `daily/YYYY-MM-DD.md` as decisions happen.
 - Commit daily log updates separately.
 - Reverts are real. If a tweak is tried and then rejected, commit the revert instead of squashing it away.
-
