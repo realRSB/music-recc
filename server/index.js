@@ -61,6 +61,16 @@ app.get("/api/me", async (request, response) => {
       },
     });
   } catch (error) {
+    if (error.status === 401 || error.status === 403) {
+      clearSession(request, response);
+      response.json({
+        authenticated: false,
+        user: null,
+        error: error.message,
+      });
+      return;
+    }
+
     sendError(response, error);
   }
 });
