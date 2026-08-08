@@ -12,6 +12,13 @@ import {
   SlidersHorizontal,
   Sparkles,
 } from "lucide-react";
+import {
+  getConfig,
+  getMe,
+  getRecommendations,
+  logoutSpotify,
+  savePlaylist as saveSpotifyPlaylist,
+} from "./api/innerHorizons.js";
 
 const ranges = ["same vibe", "slightly new", "deep cut"];
 const moods = ["open road", "late night", "bright morning", "quiet focus"];
@@ -44,7 +51,7 @@ export function App() {
 
   async function loadSession() {
     try {
-      const [configResponse, meResponse] = await Promise.all([fetchJson("/api/config"), fetchJson("/api/me")]);
+      const [configResponse, meResponse] = await Promise.all([getConfig(), getMe()]);
 
       setConfig(configResponse);
       setUser(meResponse.user);
@@ -60,10 +67,7 @@ export function App() {
     setSavedPlaylist(null);
 
     try {
-      const data = await fetchJson("/api/recommendations", {
-        method: "POST",
-        body: JSON.stringify({ source, range, mood, avoid }),
-      });
+      const data = await getRecommendations({ source, range, mood, avoid });
 
       setResult(data);
     } catch (recommendationError) {
@@ -83,13 +87,10 @@ export function App() {
     setError("");
 
     try {
-      const playlist = await fetchJson("/api/playlists", {
-        method: "POST",
-        body: JSON.stringify({
-          name: result.playlist.name,
-          description: result.playlist.description,
-          trackUris: result.recommendations.map((track) => track.uri),
-        }),
+      const playlist = await saveSpotifyPlaylist({
+        name: result.playlist.name,
+        description: result.playlist.description,
+        trackUris: result.recommendations.map((track) => track.uri),
       });
 
       setSavedPlaylist(playlist);
@@ -101,7 +102,7 @@ export function App() {
   }
 
   async function logout() {
-    await fetchJson("/auth/logout", { method: "POST" });
+    await logoutSpotify();
     setConfig((current) => ({ ...current, authenticated: false }));
     setUser(null);
     setSavedPlaylist(null);
@@ -262,21 +263,4 @@ export function App() {
       </div>
     </main>
   );
-}
-
-async function fetchJson(url, options = {}) {
-  const response = await fetch(url, {
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
-    ...options,
-  });
-  const data = await response.json().catch(() => ({}));
-
-  if (!response.ok) {
-    throw new Error(data.error || "request failed");
-  }
-
-  return data;
 }
