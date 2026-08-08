@@ -59,7 +59,11 @@ export default function Hero({
   }, []);
 
   return (
-    <section className="relative w-full overflow-hidden h-screen bg-black" style={{ height: "100dvh" }}>
+    <section
+      id="discover"
+      className="relative w-full overflow-hidden h-screen bg-black"
+      style={{ height: "100dvh" }}
+    >
       <div
         className="absolute inset-0 bg-center bg-cover bg-no-repeat z-10 hero-zoom"
         style={{ backgroundImage: `url('${BG_IMAGE_1}')` }}

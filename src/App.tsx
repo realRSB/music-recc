@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import Nav from "./components/Nav";
 import Hero from "./components/Hero";
 import Results from "./components/Results";
+import HowItWorks from "./components/HowItWorks";
+import Method from "./components/Method";
+import About from "./components/About";
 import {
   getConfig,
   getMe,
@@ -131,6 +134,10 @@ export function App() {
         avoid={form.avoid}
         onChange={update}
       />
+
+      <HowItWorks />
+      <Method />
+      <About authenticated={config.authenticated} />
 
       <footer className="relative z-10 bg-black border-t border-white/10 px-5 sm:px-10 md:px-14 py-8">
         <div className="mx-auto max-w-3xl flex flex-wrap justify-between gap-3 text-xs text-white/40">
