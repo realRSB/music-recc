@@ -1,6 +1,6 @@
 import { Check, CircleAlert, ExternalLink, Loader2 } from "lucide-react";
-import TrackRow from "./TrackRow.tsx";
-import { MOODS } from "../constants.ts";
+import TrackRow from "./TrackRow";
+import { MOODS } from "../constants";
 import type { RecommendationResult, SavedPlaylist } from "../api/innerHorizons";
 
 type ResultsProps = {

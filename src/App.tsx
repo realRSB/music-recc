@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import Nav from "./components/Nav.tsx";
-import Hero from "./components/Hero.tsx";
-import Results from "./components/Results.tsx";
+import Nav from "./components/Nav";
+import Hero from "./components/Hero";
+import Results from "./components/Results";
 import {
   getConfig,
   getMe,

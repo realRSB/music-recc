@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ArrowRight, Loader2 } from "lucide-react";
-import RevealLayer from "./RevealLayer.tsx";
-import { BG_IMAGE_1, BG_IMAGE_2, RANGES } from "../constants.ts";
+import RevealLayer from "./RevealLayer";
+import { BG_IMAGE_1, BG_IMAGE_2, RANGES } from "../constants";
 
 type HeroProps = {
   source: string;
