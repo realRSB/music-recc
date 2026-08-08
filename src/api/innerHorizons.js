@@ -13,6 +13,10 @@ export function getRecommendations(payload) {
   });
 }
 
+export function getPlaylists() {
+  return fetchJson("/api/playlists");
+}
+
 export function savePlaylist(payload) {
   return fetchJson("/api/playlists", {
     method: "POST",

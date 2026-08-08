@@ -11,6 +11,8 @@ export default function Composer({
   loading,
   canGenerate,
   spotifyConfigured,
+  authenticated,
+  playlists = [],
 }) {
   const activeRange = Math.max(
     0,
@@ -31,7 +33,7 @@ export default function Composer({
       <div className="field">
         <label className="field-label" htmlFor="source">
           <span>Start from</span>
-          <span className="field-hint">no login needed</span>
+          <span className="field-hint">{authenticated ? "choose one of yours or paste anything" : "no login needed"}</span>
         </label>
         <div className="entry">
           <ListMusic size={18} aria-hidden="true" />
@@ -56,6 +58,24 @@ export default function Composer({
             </button>
           ) : null}
         </div>
+        {authenticated && playlists.length > 0 ? (
+          <div className="playlist-picks" aria-label="Your Spotify playlists">
+            {playlists.slice(0, 6).map((playlist) => (
+              <button
+                key={playlist.id}
+                type="button"
+                className="playlist-pick"
+                onClick={() => onChange({ source: playlist.url })}
+              >
+                {playlist.image ? <img src={playlist.image} alt="" /> : <span aria-hidden="true" />}
+                <span>
+                  <strong>{playlist.name}</strong>
+                  <small>{playlist.trackTotal} tracks</small>
+                </span>
+              </button>
+            ))}
+          </div>
+        ) : null}
       </div>
 
       {/* The core dial: how far past the familiar to reach. */}
