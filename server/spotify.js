@@ -87,6 +87,37 @@ export async function getCurrentUser(accessToken) {
   return spotifyRequest("/me", { accessToken });
 }
 
+export async function getCurrentUserPlaylists(accessToken) {
+  const playlists = [];
+  let offset = 0;
+  let next = true;
+
+  while (next && playlists.length < 50) {
+    const page = await spotifyRequest("/me/playlists", {
+      accessToken,
+      query: {
+        limit: 10,
+        offset,
+      },
+    });
+
+    playlists.push(...(page.items || []).filter(Boolean));
+    next = page.next;
+    offset += 10;
+  }
+
+  return playlists.map((playlist) => ({
+    id: playlist.id,
+    name: playlist.name,
+    description: playlist.description,
+    uri: playlist.uri,
+    url: playlist.external_urls?.spotify,
+    image: playlist.images?.[0]?.url,
+    owner: playlist.owner?.display_name,
+    trackTotal: playlist.tracks?.total || playlist.items?.total || 0,
+  }));
+}
+
 export async function getTrack(trackId, accessToken) {
   return spotifyRequest(`/tracks/${trackId}`, { accessToken });
 }
@@ -98,12 +129,11 @@ export async function getSeveralArtists(artistIds, accessToken) {
     return [];
   }
 
-  const data = await spotifyRequest("/artists", {
-    accessToken,
-    query: { ids: ids.join(",") },
-  });
+  const artists = await Promise.all(
+    ids.map((id) => spotifyRequest(`/artists/${id}`, { accessToken }).catch(() => null)),
+  );
 
-  return data.artists || [];
+  return artists.filter(Boolean);
 }
 
 export async function getPlaylist(playlistId, accessToken) {
@@ -146,12 +176,13 @@ export async function getPlaylistTracks(playlistId, accessToken) {
 }
 
 export async function searchTracks(query, accessToken, limit = 20) {
+  const safeLimit = Math.min(Math.max(Number(limit) || 10, 1), 10);
   const data = await spotifyRequest("/search", {
     accessToken,
     query: {
       q: query,
       type: "track",
-      limit,
+      limit: safeLimit,
     },
   });
 
@@ -217,16 +248,33 @@ async function spotifyRequest(path, { method = "GET", accessToken, query, body }
 
 async function parseSpotifyResponse(response) {
   const text = await response.text();
-  const data = text ? JSON.parse(text) : {};
+  const data = parseResponseBody(text);
 
   if (!response.ok) {
-    const message = data.error?.message || data.error_description || "spotify request failed";
+    const message =
+      data.error?.message ||
+      data.error_description ||
+      data.message ||
+      data.text ||
+      "spotify request failed";
     const error = new Error(message);
     error.status = response.status;
     throw error;
   }
 
   return data;
+}
+
+function parseResponseBody(text) {
+  if (!text) {
+    return {};
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    return { text };
+  }
 }
 
 function normalizeTokenResponse(data, fallbackRefreshToken) {

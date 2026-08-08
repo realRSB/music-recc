@@ -77,3 +77,44 @@ test("home screen renders recommendation workflow", async ({ page }) => {
   expect(overlayCount).toBe(0);
   expect(browserErrors).toEqual([]);
 });
+
+test("authenticated users can pick one of their playlists", async ({ page }) => {
+  await page.route("**/api/config", (route) => {
+    route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ spotifyConfigured: true, authenticated: true }),
+    });
+  });
+
+  await page.route("**/api/me", (route) => {
+    route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        authenticated: true,
+        user: { id: "user-1", displayName: "test listener" },
+      }),
+    });
+  });
+
+  await page.route("**/api/playlists", (route) => {
+    route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        playlists: [
+          {
+            id: "playlist-1",
+            name: "car songs",
+            url: "https://open.spotify.com/playlist/playlist-1",
+            trackTotal: 42,
+          },
+        ],
+      }),
+    });
+  });
+
+  await page.goto("http://127.0.0.1:5173/", { waitUntil: "networkidle" });
+
+  await expect(page.getByRole("button", { name: /car songs/i })).toBeVisible();
+  await page.getByRole("button", { name: /car songs/i }).click();
+  await expect(page.locator("#source")).toHaveValue("https://open.spotify.com/playlist/playlist-1");
+});
