@@ -1,0 +1,12 @@
+#!/bin/sh
+# Blocks commits that mention Claude/Codex/AI or add an AI co-author trailer.
+# Enforces AGENTS.md rule 2 ("commit as the human, not as the agent").
+# Enable with: git config core.hooksPath .githooks
+
+msg_file="$1"
+
+if grep -Eqi '\bclaude\b|\bcodex\b|\bai\b|co-authored-by|generated with|anthropic' "$msg_file"; then
+    echo "commit-msg: message mentions Claude/Codex/AI or an AI co-author trailer." >&2
+    echo "AGENTS.md rule 2 says commits must read like a human wrote them. Edit the message and try again." >&2
+    exit 1
+fi
