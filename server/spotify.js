@@ -98,12 +98,11 @@ export async function getSeveralArtists(artistIds, accessToken) {
     return [];
   }
 
-  const data = await spotifyRequest("/artists", {
-    accessToken,
-    query: { ids: ids.join(",") },
-  });
+  const artists = await Promise.all(
+    ids.map((id) => spotifyRequest(`/artists/${id}`, { accessToken }).catch(() => null)),
+  );
 
-  return data.artists || [];
+  return artists.filter(Boolean);
 }
 
 export async function getPlaylist(playlistId, accessToken) {
@@ -146,12 +145,13 @@ export async function getPlaylistTracks(playlistId, accessToken) {
 }
 
 export async function searchTracks(query, accessToken, limit = 20) {
+  const safeLimit = Math.min(Math.max(Number(limit) || 10, 1), 10);
   const data = await spotifyRequest("/search", {
     accessToken,
     query: {
       q: query,
       type: "track",
-      limit,
+      limit: safeLimit,
     },
   });
 
