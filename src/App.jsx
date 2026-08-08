@@ -8,6 +8,7 @@ import { exampleTracks } from "./data/tracks.js";
 import {
   getConfig,
   getMe,
+  getPlaylists,
   getRecommendations,
   logoutSpotify,
   savePlaylist as saveSpotifyPlaylist,
@@ -23,6 +24,7 @@ export function App() {
     avoid: "",
   });
   const [result, setResult] = useState(null);
+  const [playlists, setPlaylists] = useState([]);
   const [savedPlaylist, setSavedPlaylist] = useState(null);
   const [status, setStatus] = useState("idle");
   const [error, setError] = useState("");
@@ -63,8 +65,24 @@ export function App() {
       if (meResponse.error) {
         setError(meResponse.error);
       }
+
+      if (meResponse.authenticated) {
+        loadPlaylists();
+      } else {
+        setPlaylists([]);
+      }
     } catch (loadError) {
       setError(loadError.message);
+    }
+  }
+
+  async function loadPlaylists() {
+    try {
+      const data = await getPlaylists();
+      setPlaylists(data.playlists || []);
+    } catch (playlistError) {
+      setPlaylists([]);
+      setError(playlistError.message);
     }
   }
 
@@ -112,6 +130,7 @@ export function App() {
       await logoutSpotify();
       setConfig((current) => ({ ...current, authenticated: false }));
       setUser(null);
+      setPlaylists([]);
       setSavedPlaylist(null);
     } catch (logoutError) {
       setError(logoutError.message);
@@ -151,6 +170,8 @@ export function App() {
               loading={loading}
               canGenerate={canGenerate}
               spotifyConfigured={config.spotifyConfigured}
+              authenticated={config.authenticated}
+              playlists={playlists}
             />
 
             <Results
