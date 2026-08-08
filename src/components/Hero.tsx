@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { ArrowRight, Loader2 } from "lucide-react";
+import { ArrowRight, ListMusic, Loader2 } from "lucide-react";
 import RevealLayer from "./RevealLayer";
 import { BG_IMAGE_1, BG_IMAGE_2, RANGES } from "../constants";
+import type { UserPlaylist } from "../api/innerHorizons";
 
 type HeroProps = {
   source: string;
@@ -11,6 +12,7 @@ type HeroProps = {
   loading: boolean;
   canGenerate: boolean;
   spotifyConfigured: boolean;
+  playlists: UserPlaylist[];
 };
 
 export default function Hero({
@@ -21,6 +23,7 @@ export default function Hero({
   loading,
   canGenerate,
   spotifyConfigured,
+  playlists,
 }: HeroProps) {
   const mouse = useRef({ x: -999, y: -999 });
   const smooth = useRef({ x: -999, y: -999 });
@@ -120,6 +123,28 @@ export default function Hero({
             placeholder="Playlist link, track link, or song name"
             className="w-full bg-white/10 backdrop-blur-md border border-white/25 rounded-full px-5 py-3 text-sm text-white placeholder:text-white/50 outline-none focus:border-[#e8702a] focus:ring-2 focus:ring-[#e8702a]/40 transition-colors"
           />
+
+          {/* Once you're signed in, your own playlists are the fastest source
+              to start from — one click fills the field above. */}
+          {playlists.length > 0 ? (
+            <div className="flex flex-col gap-2">
+              <span className="text-xs text-white/50">or pick one of yours</span>
+              <div className="flex flex-wrap gap-2 max-h-24 overflow-y-auto">
+                {playlists.map((playlist) => (
+                  <button
+                    key={playlist.id}
+                    type="button"
+                    onClick={() => onChange({ source: playlist.url })}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 border border-white/25 text-white/85 text-xs font-medium hover:bg-white/20 hover:text-white transition-colors"
+                  >
+                    <ListMusic size={12} aria-hidden="true" />
+                    {playlist.name}
+                    <span className="text-white/40">{playlist.trackTotal}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : null}
 
           <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="How far out">
             {RANGES.map((option) => (
