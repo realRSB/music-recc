@@ -1,43 +1,20 @@
 import crypto from "node:crypto";
 
 const SESSION_COOKIE = "inner_horizons_session";
-const sessions = new Map();
-
-export function createSession(tokens) {
-  const id = crypto.randomUUID();
-
-  sessions.set(id, {
-    ...tokens,
-    createdAt: Date.now(),
-  });
-
-  return id;
-}
+const ALGORITHM = "aes-256-gcm";
 
 export function getSession(request) {
-  const id = parseCookies(request.headers.cookie)[SESSION_COOKIE];
+  const value = parseCookies(request.headers.cookie)[SESSION_COOKIE];
 
-  if (!id) {
+  if (!value) {
     return null;
   }
 
-  const session = sessions.get(id);
-  return session ? { id, ...session } : null;
+  return decodeSession(value);
 }
 
-export function updateSession(id, tokens) {
-  if (!sessions.has(id)) {
-    return;
-  }
-
-  sessions.set(id, {
-    ...sessions.get(id),
-    ...tokens,
-  });
-}
-
-export function setSessionCookie(response, sessionId) {
-  response.cookie(SESSION_COOKIE, sessionId, {
+export function setSessionCookie(response, tokens) {
+  response.cookie(SESSION_COOKIE, encodeSession(tokens), {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
@@ -47,13 +24,49 @@ export function setSessionCookie(response, sessionId) {
 }
 
 export function clearSession(request, response) {
-  const session = getSession(request);
+  response.clearCookie(SESSION_COOKIE, { path: "/" });
+}
 
-  if (session) {
-    sessions.delete(session.id);
+function encodeSession(tokens) {
+  const key = getKey();
+  const iv = crypto.randomBytes(12);
+  const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
+  const encrypted = Buffer.concat([
+    cipher.update(JSON.stringify(tokens), "utf8"),
+    cipher.final(),
+  ]);
+
+  return Buffer.concat([iv, cipher.getAuthTag(), encrypted]).toString("base64url");
+}
+
+function decodeSession(value) {
+  try {
+    const key = getKey();
+    const buffer = Buffer.from(value, "base64url");
+    const iv = buffer.subarray(0, 12);
+    const authTag = buffer.subarray(12, 28);
+    const encrypted = buffer.subarray(28);
+    const decipher = crypto.createDecipheriv(ALGORITHM, key, iv);
+
+    decipher.setAuthTag(authTag);
+
+    const decrypted = Buffer.concat([decipher.update(encrypted), decipher.final()]);
+    return JSON.parse(decrypted.toString("utf8"));
+  } catch {
+    return null;
+  }
+}
+
+function getKey() {
+  const secret = process.env.SESSION_SECRET;
+
+  if (!secret) {
+    const error = new Error("SESSION_SECRET is not configured");
+    error.status = 500;
+    throw error;
   }
 
-  response.clearCookie(SESSION_COOKIE, { path: "/" });
+  return crypto.createHash("sha256").update(secret).digest();
 }
 
 function parseCookies(cookieHeader = "") {

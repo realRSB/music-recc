@@ -1,5 +1,3 @@
-import { updateSession } from "./session.js";
-
 const API_BASE = "https://api.spotify.com/v1";
 const ACCOUNTS_BASE = "https://accounts.spotify.com";
 const USER_SCOPES = [
@@ -51,16 +49,15 @@ export async function exchangeCodeForTokens(code) {
 
 export async function getUserAccessToken(session) {
   if (!session?.accessToken) {
-    return null;
+    return { accessToken: null, refreshedTokens: null };
   }
 
   if (!session.expiresAt || session.expiresAt > Date.now() + 30_000) {
-    return session.accessToken;
+    return { accessToken: session.accessToken, refreshedTokens: null };
   }
 
   const refreshed = await refreshUserToken(session.refreshToken);
-  updateSession(session.id, refreshed);
-  return refreshed.accessToken;
+  return { accessToken: refreshed.accessToken, refreshedTokens: refreshed };
 }
 
 export async function getAppAccessToken() {
