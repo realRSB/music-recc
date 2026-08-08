@@ -20,6 +20,9 @@ Rules for AI agents (Claude, Codex, etc.) working in this repo. This is a hackat
 
 4. **All commits must be verified (signed).** This machine is set up to sign commits automatically (SSH signing via `commit.gpgsign`), so as long as you don't override `user.email` or the signing config, commits will carry the "Verified" badge on GitHub. Don't run `git commit --no-gpg-sign` or otherwise disable signing.
 
+## Staying in sync
+Run `scripts/auto-pull.ps1` in a terminal tab and leave it running while you work — it does `git pull --rebase --autostash` every 30s so nobody's branch drifts far from main, and pauses itself if a conflict needs manual resolving. Agents: pull (`git pull --rebase`) before starting any task too, don't assume main is what you last saw. This plus rule 1 is what keeps 3 people on the same branch feeling fast — it's still git, not a live doc, so if you're actually pairing on the same file at the same time use VS Code Live Share instead.
+
 ## Before committing
 - Run whatever tests/build exist for the part of the code you touched.
 - Never commit secrets, `.env` files, or credentials.
