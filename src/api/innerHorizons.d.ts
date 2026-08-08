@@ -17,6 +17,9 @@ export interface SpotifyUser {
 export interface MeResponse {
   authenticated: boolean;
   user: SpotifyUser | null;
+  /* Set when the server dropped an expired or rejected session (401/403)
+     rather than failing the request outright. */
+  error?: string;
 }
 
 export interface Track {

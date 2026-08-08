@@ -5,6 +5,7 @@ import Results from "./components/Results";
 import HowItWorks from "./components/HowItWorks";
 import Method from "./components/Method";
 import About from "./components/About";
+import AuthNotice from "./components/AuthNotice";
 import {
   getConfig,
   getMe,
@@ -20,6 +21,31 @@ import type {
   SpotifyUser,
   UserPlaylist,
 } from "./api/innerHorizons";
+
+/* The server's messages are accurate but terse. Map the ones a person can
+   actually act on to something that says what to do next; pass anything
+   else through unchanged rather than swallowing it. */
+function friendlyAuthError(raw: string) {
+  const message = raw.trim();
+
+  if (/credentials are missing/i.test(message)) {
+    return "Spotify isn't configured on this server. Copy .env.example to .env, add SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET, then restart it.";
+  }
+
+  if (/spotify_login_failed/i.test(message)) {
+    return "Spotify sign-in didn't complete. That usually means the redirect URI in your Spotify app doesn't match SPOTIFY_REDIRECT_URI — check it's exactly http://127.0.0.1:5173/auth/callback.";
+  }
+
+  if (/invalid.*redirect/i.test(message)) {
+    return "Spotify rejected the redirect URI. Register http://127.0.0.1:5173/auth/callback in your Spotify app settings.";
+  }
+
+  if (/token|expired|revoked/i.test(message)) {
+    return "Your Spotify session expired. Connect again to keep going.";
+  }
+
+  return message;
+}
 
 export function App() {
   const [config, setConfig] = useState<SpotifyConfig>({
@@ -38,9 +64,27 @@ export function App() {
   const [savedPlaylist, setSavedPlaylist] = useState<SavedPlaylist | null>(null);
   const [status, setStatus] = useState<"idle" | "loading" | "saving">("idle");
   const [error, setError] = useState("");
+  const [authNotice, setAuthNotice] = useState("");
 
   useEffect(() => {
     loadSession();
+  }, []);
+
+  /* The OAuth routes report failure by redirecting to /?error=... — read it
+     once, then strip it so a refresh doesn't resurrect a stale message. */
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const authError = params.get("error");
+    if (!authError) return;
+
+    setAuthNotice(friendlyAuthError(authError));
+    params.delete("error");
+    const query = params.toString();
+    window.history.replaceState(
+      {},
+      "",
+      `${window.location.pathname}${query ? `?${query}` : ""}`,
+    );
   }, []);
 
   const loading = status === "loading";
@@ -53,6 +97,12 @@ export function App() {
       const [configResponse, meResponse] = await Promise.all([getConfig(), getMe()]);
       setConfig(configResponse);
       setUser(meResponse.user);
+
+      /* The server clears expired sessions and reports it here rather than
+         erroring, so without this a silent logout looks like a broken button. */
+      if (meResponse.error) {
+        setAuthNotice(friendlyAuthError(meResponse.error));
+      }
 
       /* Only signed-in users have playlists to offer, and a failure here
          shouldn't block the rest of the page from working. */
@@ -126,6 +176,10 @@ export function App() {
   return (
     <div className="min-h-screen bg-black tracking-[-0.02em]" style={{ fontFamily: "'Inter', sans-serif" }}>
       <Nav authenticated={config.authenticated} user={user} onLogout={logout} />
+
+      {authNotice ? (
+        <AuthNotice message={authNotice} onDismiss={() => setAuthNotice("")} />
+      ) : null}
 
       <Hero
         source={form.source}
