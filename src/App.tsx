@@ -8,6 +8,7 @@ import About from "./components/About";
 import {
   getConfig,
   getMe,
+  getPlaylists,
   getRecommendations,
   logoutSpotify,
   savePlaylist as saveSpotifyPlaylist,
@@ -17,6 +18,7 @@ import type {
   SavedPlaylist,
   SpotifyConfig,
   SpotifyUser,
+  UserPlaylist,
 } from "./api/innerHorizons";
 
 export function App() {
@@ -25,6 +27,7 @@ export function App() {
     authenticated: false,
   });
   const [user, setUser] = useState<SpotifyUser | null>(null);
+  const [playlists, setPlaylists] = useState<UserPlaylist[]>([]);
   const [form, setForm] = useState({
     source: "",
     range: "same vibe",
@@ -50,6 +53,17 @@ export function App() {
       const [configResponse, meResponse] = await Promise.all([getConfig(), getMe()]);
       setConfig(configResponse);
       setUser(meResponse.user);
+
+      /* Only signed-in users have playlists to offer, and a failure here
+         shouldn't block the rest of the page from working. */
+      if (configResponse.authenticated) {
+        try {
+          const { playlists: mine } = await getPlaylists();
+          setPlaylists(mine ?? []);
+        } catch {
+          setPlaylists([]);
+        }
+      }
     } catch (loadError) {
       setError((loadError as Error).message);
     }
@@ -100,6 +114,7 @@ export function App() {
       setConfig((current) => ({ ...current, authenticated: false }));
       setUser(null);
       setSavedPlaylist(null);
+      setPlaylists([]);
     } catch (logoutError) {
       setError((logoutError as Error).message);
     }
@@ -120,6 +135,7 @@ export function App() {
         loading={loading}
         canGenerate={canGenerate}
         spotifyConfigured={config.spotifyConfigured}
+        playlists={playlists}
       />
 
       <Results
