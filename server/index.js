@@ -160,7 +160,12 @@ app.get("/auth/callback", async (request, response) => {
 
 if (isProduction) {
   app.use(express.static(path.join(root, "dist")));
-  app.get("*", (request, response) => {
+  app.use((request, response, next) => {
+    if (request.method !== "GET") {
+      next();
+      return;
+    }
+
     response.sendFile(path.join(root, "dist", "index.html"));
   });
 } else {
