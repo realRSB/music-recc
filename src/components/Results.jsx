@@ -25,28 +25,25 @@ export default function Results({
   error,
   savedPlaylist,
   headline,
-  taste,
+  tasteBits = [],
 }) {
   return (
     <section className="results" aria-labelledby="results-title">
       <div className="panel playlist-head">
         <div>
           <h2 id="results-title">{headline}</h2>
-          <p className="playlist-meta">
+          <div className="playlist-meta">
             {isExample ? (
               <span className="tag tag-example">example picks</span>
             ) : (
-              <strong>{tracks.length} tracks</strong>
+              <span className="tag tag-count">{tracks.length} tracks</span>
             )}
-            {taste ? (
-              <>
-                <span className="dot" aria-hidden="true">
-                  ·
-                </span>
-                {taste}
-              </>
-            ) : null}
-          </p>
+            {tasteBits.map((bit) => (
+              <span className="tag tag-vibe" key={bit}>
+                {bit}
+              </span>
+            ))}
+          </div>
         </div>
 
         <button

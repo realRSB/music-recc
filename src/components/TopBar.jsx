@@ -30,18 +30,12 @@ export default function TopBar({ authenticated, user, onLogout }) {
               {user?.displayName || "disconnect"}
             </button>
           ) : (
-            /* Starts the OAuth redirect. Kept as a button rather than a bare
-               link so it reads as an action and matches the smoke test. */
-            <button
-              type="button"
-              className="btn btn-solid"
-              onClick={() => {
-                window.location.href = "/auth/spotify";
-              }}
-            >
+            /* A real navigation to the OAuth redirect, so middle-click and
+               open-in-new-tab behave the way people expect. */
+            <a className="btn btn-solid" href="/auth/spotify">
               <Plus size={16} aria-hidden="true" />
               connect Spotify
-            </button>
+            </a>
           )}
         </div>
       </div>

@@ -41,13 +41,13 @@ export function App() {
 
   const headline = result?.playlist?.name || "Inner Horizons: ready for your source";
 
-  const taste = useMemo(() => {
-    if (!result) return `${form.range} · ${form.mood}`;
+  /* Kept as separate strings so each reads as its own chip rather than one
+     run-on line. */
+  const tasteBits = useMemo(() => {
+    if (!result) return [form.range, form.mood];
     const genre = result.taste?.topGenres?.[0]?.name;
     const artist = result.taste?.topArtists?.[0]?.name;
-    return [genre ? `${genre} lane` : null, artist ? `${artist} anchor` : null]
-      .filter(Boolean)
-      .join(" · ");
+    return [genre ? `${genre} lane` : null, artist ? `${artist} anchor` : null].filter(Boolean);
   }, [result, form.range, form.mood]);
 
   async function loadSession() {
@@ -155,7 +155,7 @@ export function App() {
               error={error}
               savedPlaylist={savedPlaylist}
               headline={headline}
-              taste={taste}
+              tasteBits={tasteBits}
             />
           </div>
         </main>
