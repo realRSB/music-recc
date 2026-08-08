@@ -15,9 +15,11 @@
   --border-strong: rgb(255 255 255 / 0.16);
 
   /* ---- ink ------------------------------------------------------------- */
+  /* Contrast against --bg-base: 17.3:1 / 6.7:1 / 5.0:1. The faint step is the
+     floor — anything darker drops hint text and placeholders below WCAG AA. */
   --text: #f2eff7;
   --text-muted: #9a93ac;
-  --text-faint: #6f6883;
+  --text-faint: #837c99;
 
   /* ---- accents --------------------------------------------------------- */
   --ember: #f0864e;
@@ -282,9 +284,11 @@ p {
   display: inline-flex;
   align-items: center;
   gap: var(--s-3);
+  color: var(--text);
   font-family: var(--font-display);
   font-size: var(--step-1);
   letter-spacing: -0.02em;
+  text-decoration: none;
 }
 
 /* Brand mark is the product in one glyph: a sun crossing a horizon line. */
@@ -729,7 +733,7 @@ h1 {
   transform: scale(0.96);
 }
 
-.chip[aria-pressed="true"] {
+.chip[aria-checked="true"] {
   color: var(--ember-lift);
   border-color: var(--ember);
   background: var(--ember-glow);
@@ -1074,6 +1078,12 @@ h1 {
 @media (max-width: 620px) {
   .shell {
     width: min(1160px, 100% - var(--s-4) * 2);
+  }
+
+  /* Keep the wordmark on one line next to the Spotify button. */
+  .brand {
+    font-size: var(--step-0);
+    white-space: nowrap;
   }
 
   .composer,
