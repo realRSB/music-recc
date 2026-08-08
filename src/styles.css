@@ -634,6 +634,68 @@ h1 {
   color: var(--text);
 }
 
+.playlist-picks {
+  display: grid;
+  gap: var(--s-2);
+  margin-top: var(--s-2);
+}
+
+.playlist-pick {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  min-height: 56px;
+  padding: var(--s-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease),
+    transform var(--dur-fast) var(--ease);
+}
+
+.playlist-pick:hover {
+  border-color: var(--border-strong);
+  background: var(--surface-hover);
+  transform: translateY(-1px);
+}
+
+.playlist-pick img,
+.playlist-pick > span:first-child {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-sm);
+  background: var(--horizon);
+  object-fit: cover;
+}
+
+.playlist-pick span:last-child {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.playlist-pick strong,
+.playlist-pick small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.playlist-pick strong {
+  font-size: var(--step--1);
+  font-weight: 600;
+}
+
+.playlist-pick small {
+  color: var(--text-faint);
+  font-size: 0.72rem;
+}
+
 /* ------------------------------------------------------------------ slider */
 
 .range-wrap {
