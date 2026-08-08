@@ -1,17 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import {
-  ArrowRight,
-  Check,
-  ExternalLink,
-  ListMusic,
-  Loader2,
-  LogOut,
-  Music2,
-  Plus,
-  Search,
-  SlidersHorizontal,
-  Sparkles,
-} from "lucide-react";
+import { useEffect, useState } from "react";
+import { LogOut, Music2, Plus, Search } from "lucide-react";
 import {
   getConfig,
   getMe,
@@ -19,9 +7,8 @@ import {
   logoutSpotify,
   savePlaylist as saveSpotifyPlaylist,
 } from "./api/innerHorizons.js";
-
-const ranges = ["same vibe", "slightly new", "deep cut"];
-const moods = ["open road", "late night", "bright morning", "quiet focus"];
+import { DiscoveryForm, moods, ranges } from "./components/DiscoveryForm.jsx";
+import { RecommendationResults } from "./components/RecommendationResults.jsx";
 
 export function App() {
   const [config, setConfig] = useState({ spotifyConfigured: false, authenticated: false });
@@ -41,13 +28,6 @@ export function App() {
 
   const canGenerate = config.spotifyConfigured && source.trim() && status !== "loading";
   const canSave = config.authenticated && result?.recommendations?.length && status !== "saving";
-  const headline = useMemo(() => {
-    if (result?.source?.name) {
-      return `Inner Horizons: after ${result.source.name}`;
-    }
-
-    return "Inner Horizons: ready for your source";
-  }, [result]);
 
   async function loadSession() {
     try {
@@ -137,128 +117,31 @@ export function App() {
         </header>
 
         <section className="layout">
-          <form className="panel builder" onSubmit={generateRecommendations}>
-            <p className="kicker">
-              <Sparkles size={17} />
-              same vibe, new artists
-            </p>
-            <h1>Find the songs hiding past your usual rotation.</h1>
-            <p className="lede">
-              Paste a Spotify playlist or song, tune how far you want to roam, and build a real recommendation list from Spotify metadata.
-            </p>
+          <DiscoveryForm
+            avoid={avoid}
+            canGenerate={canGenerate}
+            config={config}
+            mood={mood}
+            onSubmit={generateRecommendations}
+            range={range}
+            setAvoid={setAvoid}
+            setMood={setMood}
+            setRange={setRange}
+            setSource={setSource}
+            source={source}
+            status={status}
+          />
 
-            {!config.spotifyConfigured ? (
-              <div className="notice">
-                Add Spotify credentials from <code>.env.example</code> to run live recommendations.
-              </div>
-            ) : null}
-
-            <div className="input-stack">
-              <div className="field">
-                <label htmlFor="source">playlist link or song</label>
-                <div className="entry">
-                  <ListMusic size={20} />
-                  <input
-                    id="source"
-                    placeholder="spotify playlist url, track url, or song name"
-                    value={source}
-                    onChange={(event) => setSource(event.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="controls">
-                <label className="field">
-                  <span className="control-label">range</span>
-                  <select value={range} onChange={(event) => setRange(event.target.value)}>
-                    {ranges.map((option) => (
-                      <option key={option}>{option}</option>
-                    ))}
-                  </select>
-                </label>
-                <label className="field">
-                  <span className="control-label">mood</span>
-                  <select value={mood} onChange={(event) => setMood(event.target.value)}>
-                    {moods.map((option) => (
-                      <option key={option}>{option}</option>
-                    ))}
-                  </select>
-                </label>
-              </div>
-
-              <div className="field">
-                <label htmlFor="avoid">avoid</label>
-                <div className="entry">
-                  <SlidersHorizontal size={20} />
-                  <input
-                    id="avoid"
-                    placeholder="artists, genres, or words to avoid"
-                    value={avoid}
-                    onChange={(event) => setAvoid(event.target.value)}
-                  />
-                </div>
-              </div>
-
-              <button className="primary-button" type="submit" disabled={!canGenerate}>
-                {status === "loading" ? <Loader2 className="spin" size={18} /> : <ArrowRight size={18} />}
-                build horizon playlist
-              </button>
-            </div>
-          </form>
-
-          <section className="panel visual" aria-live="polite">
-            <div className="results-head">
-              <div>
-                <h2>{headline}</h2>
-                <p>{result ? `${range} picks for a ${mood} drift.` : "recommendations will appear here after Spotify analysis."}</p>
-              </div>
-              <button className="secondary-button" type="button" onClick={savePlaylist} disabled={!canSave}>
-                {status === "saving" ? <Loader2 className="spin" size={18} /> : <Check size={18} />}
-                save
-              </button>
-            </div>
-
-            {error ? <div className="error">{error}</div> : null}
-            {savedPlaylist ? (
-              <a className="saved-link" href={savedPlaylist.url} target="_blank" rel="noreferrer">
-                opened in Spotify: {savedPlaylist.name}
-              </a>
-            ) : null}
-
-            {result ? (
-              <>
-                <div className="taste-summary">
-                  <span>{result.taste.topGenres[0]?.name || "metadata"} lane</span>
-                  <span>{result.taste.topArtists[0]?.name || "source"} anchor</span>
-                  <span>{result.recommendations.length} tracks</span>
-                </div>
-                <div className="recommendations">
-                  {result.recommendations.map((track) => (
-                    <article className="recommendation" key={track.id}>
-                      <img className="track-art" src={track.artwork} alt="" />
-                      <div className="track-copy">
-                        <h3>{track.title}</h3>
-                        <p>{track.artist}</p>
-                        <p>{track.reason}</p>
-                        <span className="tag">
-                          <SlidersHorizontal size={14} />
-                          {track.horizon}
-                        </span>
-                      </div>
-                      <a className="play-button" href={track.url} target="_blank" rel="noreferrer" title={`Open ${track.title} on Spotify`}>
-                        <ExternalLink size={17} />
-                      </a>
-                    </article>
-                  ))}
-                </div>
-              </>
-            ) : (
-              <div className="empty-state">
-                <Music2 size={40} />
-                <p>Give Inner Horizons a playlist or track and it will search Spotify for nearby songs from fresh artists.</p>
-              </div>
-            )}
-          </section>
+          <RecommendationResults
+            canSave={canSave}
+            error={error}
+            mood={mood}
+            onSave={savePlaylist}
+            range={range}
+            result={result}
+            savedPlaylist={savedPlaylist}
+            status={status}
+          />
         </section>
       </div>
     </main>
