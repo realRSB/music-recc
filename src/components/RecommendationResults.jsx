@@ -1,3 +1,4 @@
+import React from "react";
 import { Check, ExternalLink, Loader2, Music2, SlidersHorizontal } from "lucide-react";
 
 export function RecommendationResults({

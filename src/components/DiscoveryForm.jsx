@@ -1,3 +1,4 @@
+import React from "react";
 import { ArrowRight, ListMusic, Loader2, SlidersHorizontal, Sparkles } from "lucide-react";
 
 export const ranges = ["same vibe", "slightly new", "deep cut"];

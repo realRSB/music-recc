@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { LogOut, Music2, Plus, Search } from "lucide-react";
 import {
   getConfig,
