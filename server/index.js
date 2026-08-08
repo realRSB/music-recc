@@ -11,6 +11,7 @@ import {
   createPlaylist,
   exchangeCodeForTokens,
   getCurrentUser,
+  getCurrentUserPlaylists,
   getSpotifyAuthUrl,
   getUserAccessToken,
   isSpotifyConfigured,
@@ -89,6 +90,24 @@ app.post("/api/recommendations", async (request, response) => {
     const result = await buildRecommendations({ source, range, mood, avoid }, userAccessToken);
 
     response.json(result);
+  } catch (error) {
+    sendError(response, error);
+  }
+});
+
+app.get("/api/playlists", async (request, response) => {
+  try {
+    const session = getSession(request);
+
+    if (!session) {
+      response.status(401).json({ error: "connect Spotify before loading playlists" });
+      return;
+    }
+
+    const accessToken = await getUserAccessToken(session);
+    const playlists = await getCurrentUserPlaylists(accessToken);
+
+    response.json({ playlists });
   } catch (error) {
     sendError(response, error);
   }
