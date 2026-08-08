@@ -1,0 +1,29 @@
+# AGENTS.md
+
+Rules for AI agents (Claude, Codex, etc.) working in this repo. This is a hackathon project with 3 people on the team — read this before making changes. More rules will get added as we go.
+
+## Git workflow
+
+1. **Commit and push constantly.** Every change gets committed and pushed right away, no matter how small — a one-line fix, a single component, whatever. Don't sit on work waiting for a "full feature" to be done. We want the commit history to show steady progress the whole hackathon.
+
+2. **Commit as the human, not as the agent.**
+   - Use the git identity already set on this machine (`juanmendoza-dev` / juanmendoza6159@gmail.com). Don't touch `user.name` / `user.email`.
+   - Do **not** add `Co-Authored-By: Claude` or any AI co-author trailer.
+   - Do **not** mention Claude, Codex, AI, or "generated with" anywhere in the message.
+
+3. **Write commit messages like a person typing fast, not a changelog bot.**
+   - Short, casual, no strict `feat:` / `fix:` / `chore:` prefixes.
+   - Vary the phrasing, don't reuse the same template every time.
+   - A small typo or dropped word here and there is fine — it should read like someone committing between other things, not a generated log.
+   - Bad: `feat: implement user authentication module with JWT support`
+   - Good: `added login, jwt auth working now`
+
+4. **All commits must be verified (signed).** This machine is set up to sign commits automatically (SSH signing via `commit.gpgsign`), so as long as you don't override `user.email` or the signing config, commits will carry the "Verified" badge on GitHub. Don't run `git commit --no-gpg-sign` or otherwise disable signing.
+
+## Before committing
+- Run whatever tests/build exist for the part of the code you touched.
+- Never commit secrets, `.env` files, or credentials.
+- Push immediately after committing so the other two teammates see it.
+
+## Scope
+Applies to every agent working in this repo. Check this file again before assuming these are the only rules — it'll grow.
