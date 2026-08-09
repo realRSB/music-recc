@@ -57,7 +57,6 @@ export function App() {
   const [form, setForm] = useState({
     source: "",
     range: "same vibe",
-    mood: "open road",
     avoid: "",
   });
   const [result, setResult] = useState<RecommendationResult | null>(null);
@@ -200,7 +199,6 @@ export function App() {
         onSave={savePlaylist}
         error={error}
         savedPlaylist={savedPlaylist}
-        mood={form.mood}
         avoid={form.avoid}
         onChange={update}
       />

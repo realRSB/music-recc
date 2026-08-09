@@ -1,6 +1,5 @@
 import { Check, CircleAlert, ExternalLink, Loader2 } from "lucide-react";
 import TrackRow from "./TrackRow";
-import { MOODS } from "../constants";
 import type { RecommendationResult, SavedPlaylist } from "../api/innerHorizons";
 
 type ResultsProps = {
@@ -11,9 +10,8 @@ type ResultsProps = {
   onSave: () => void;
   error: string;
   savedPlaylist: SavedPlaylist | null;
-  mood: string;
   avoid: string;
-  onChange: (patch: { mood?: string; avoid?: string }) => void;
+  onChange: (patch: { avoid?: string }) => void;
 };
 
 function SkeletonRow() {
@@ -37,7 +35,6 @@ export default function Results({
   onSave,
   error,
   savedPlaylist,
-  mood,
   avoid,
   onChange,
 }: ResultsProps) {
@@ -98,47 +95,20 @@ export default function Results({
           </button>
         </header>
 
-        {/* Refinements live down here so the hero stays a single clear action. */}
-        <div className="mt-8 grid gap-4 sm:grid-cols-2">
-          <div>
-            <span id="mood-label" className="block text-xs font-medium text-white/60 mb-2">
-              Mood
-            </span>
-            <div className="flex flex-wrap gap-2" role="radiogroup" aria-labelledby="mood-label">
-              {MOODS.map((option) => (
-                <button
-                  key={option}
-                  type="button"
-                  role="radio"
-                  aria-checked={mood === option}
-                  onClick={() => onChange({ mood: option })}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
-                    mood === option
-                      ? "bg-[#e8702a]/20 text-[#f0a273] border-[#e8702a]/50"
-                      : "bg-white/[0.04] text-white/70 border-white/15 hover:bg-white/10 hover:text-white"
-                  }`}
-                >
-                  {option}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <label htmlFor="avoid" className="block text-xs font-medium text-white/60 mb-2">
-              Anything to avoid?
-            </label>
-            <input
-              id="avoid"
-              name="avoid"
-              type="text"
-              autoComplete="off"
-              value={avoid}
-              onChange={(event) => onChange({ avoid: event.target.value })}
-              placeholder="Artists, genres, or words"
-              className="w-full bg-white/[0.04] border border-white/15 rounded-full px-4 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:border-[#e8702a] focus:ring-2 focus:ring-[#e8702a]/30 transition-colors"
-            />
-          </div>
+        <div className="mt-8">
+          <label htmlFor="avoid" className="block text-xs font-medium text-white/60 mb-2">
+            Anything to avoid?
+          </label>
+          <input
+            id="avoid"
+            name="avoid"
+            type="text"
+            autoComplete="off"
+            value={avoid}
+            onChange={(event) => onChange({ avoid: event.target.value })}
+            placeholder="Artists, genres, or words"
+            className="w-full bg-white/[0.04] border border-white/15 rounded-full px-4 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:border-[#e8702a] focus:ring-2 focus:ring-[#e8702a]/30 transition-colors"
+          />
         </div>
 
         <p className="sr-only" role="status" aria-live="polite">

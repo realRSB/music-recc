@@ -51,7 +51,6 @@ export interface RecommendationResult {
 export interface RecommendationRequest {
   source: string;
   range: string;
-  mood: string;
   avoid: string;
 }
 
