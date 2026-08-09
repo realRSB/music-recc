@@ -34,6 +34,8 @@ export interface Track {
   horizon: string;
   reason: string;
   score?: number;
+  genres?: string[];
+  releaseYear?: number;
 }
 
 export interface TasteFacet {
@@ -43,7 +45,12 @@ export interface TasteFacet {
 
 export interface RecommendationResult {
   source: { type?: string; id?: string; name: string; url?: string; image?: string };
-  taste: { topGenres: TasteFacet[]; topArtists: TasteFacet[] };
+  taste: {
+    topGenres: TasteFacet[];
+    topArtists: TasteFacet[];
+    genreSource: "spotify" | "inferred";
+    averagePopularity: number;
+  };
   playlist: { name: string; description: string };
   recommendations: Track[];
 }

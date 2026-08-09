@@ -268,7 +268,14 @@ function formatRecommendation(track, { score, taste, candidateGenres, query, lan
     horizon: lane ? `${lane} horizon` : "new artist",
     reason,
     score,
+    genres: candidateGenres,
+    releaseYear: parseReleaseYear(track.album?.release_date),
   };
+}
+
+function parseReleaseYear(releaseDate) {
+  const year = parseInt(String(releaseDate || "").slice(0, 4), 10);
+  return Number.isFinite(year) ? year : undefined;
 }
 
 function buildSearchQueries(taste, range) {
