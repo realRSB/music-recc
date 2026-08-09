@@ -14,21 +14,21 @@ export function isSpotifyConfigured() {
   return Boolean(process.env.SPOTIFY_CLIENT_ID && process.env.SPOTIFY_CLIENT_SECRET);
 }
 
-export function getSpotifyAuthUrl(state) {
+export function getSpotifyAuthUrl(state, redirectUri) {
   requireSpotifyConfig();
 
   const params = new URLSearchParams({
     response_type: "code",
     client_id: process.env.SPOTIFY_CLIENT_ID,
     scope: USER_SCOPES.join(" "),
-    redirect_uri: getRedirectUri(),
+    redirect_uri: getRedirectUri(redirectUri),
     state,
   });
 
   return `${ACCOUNTS_BASE}/authorize?${params}`;
 }
 
-export async function exchangeCodeForTokens(code) {
+export async function exchangeCodeForTokens(code, redirectUri) {
   requireSpotifyConfig();
 
   const response = await fetch(`${ACCOUNTS_BASE}/api/token`, {
@@ -40,7 +40,7 @@ export async function exchangeCodeForTokens(code) {
     body: new URLSearchParams({
       grant_type: "authorization_code",
       code,
-      redirect_uri: getRedirectUri(),
+      redirect_uri: getRedirectUri(redirectUri),
     }),
   });
 
@@ -282,8 +282,19 @@ function normalizeTokenResponse(data, fallbackRefreshToken) {
   };
 }
 
-function getRedirectUri() {
-  return process.env.SPOTIFY_REDIRECT_URI || "http://127.0.0.1:5173/auth/callback";
+function getRedirectUri(redirectUri) {
+  if (redirectUri && shouldUseRequestRedirect()) {
+    return redirectUri;
+  }
+
+  return process.env.SPOTIFY_REDIRECT_URI || redirectUri || "http://127.0.0.1:5173/auth/callback";
+}
+
+function shouldUseRequestRedirect() {
+  return (
+    process.env.NODE_ENV === "production" &&
+    (!process.env.SPOTIFY_REDIRECT_URI || process.env.SPOTIFY_REDIRECT_URI.includes("127.0.0.1"))
+  );
 }
 
 function getClientAuthHeader() {

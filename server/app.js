@@ -188,7 +188,7 @@ app.get("/auth/spotify", (request, response) => {
       path: "/",
     });
 
-    response.redirect(getSpotifyAuthUrl(state));
+    response.redirect(getSpotifyAuthUrl(state, getCallbackUrl(request)));
   } catch (error) {
     response.redirect(`/?error=${encodeURIComponent(error.message)}`);
   }
@@ -208,7 +208,7 @@ app.get("/auth/callback", async (request, response) => {
       return;
     }
 
-    const tokens = await exchangeCodeForTokens(request.query.code);
+    const tokens = await exchangeCodeForTokens(request.query.code, getCallbackUrl(request));
 
     response.clearCookie("inner_horizons_oauth_state", { path: "/" });
     setSessionCookie(response, tokens);
@@ -246,4 +246,11 @@ function parseCookies(cookieHeader = "") {
 
     return cookies;
   }, {});
+}
+
+function getCallbackUrl(request) {
+  const protocol = request.get("x-forwarded-proto") || request.protocol;
+  const host = request.get("x-forwarded-host") || request.get("host");
+
+  return `${protocol}://${host}/auth/callback`;
 }
