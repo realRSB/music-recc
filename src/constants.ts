@@ -2,7 +2,6 @@ export const SPOTLIGHT_R = 260;
 
 /* Wire values the server expects — see POST /api/recommendations. */
 export const RANGES = ["same vibe", "slightly new", "deep cut"];
-export const MOODS = ["open road", "late night", "bright morning", "quiet focus"];
 
 export const BG_IMAGE_1 =
   "https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20260609_195923_b0ba8ace-1d1d-4f2c-9a28-1ab84b330680.png&w=1280&q=85";
