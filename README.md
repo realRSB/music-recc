@@ -8,7 +8,7 @@ Inner Horizons is a music discovery app that helps you discover new songs that a
 - The recommendation algorithm filters the possible songs, to match user preferences
 
 ## Production app
-[App demo]https://music-recc.vercel.app/
+[App demo](https://music-recc.vercel.app/)
 
 Currently if you sign up it may not work, as we have to approve the user from our Spotify dev platform. However, send us your email if you want to test it out!
 
@@ -49,7 +49,7 @@ Currently if you sign up it may not work, as we have to approve the user from ou
 5. Open `http://127.0.0.1:5173`.
 
 ## Screenshots and demo link
-Try the live demo: [App demo]https://music-recc.vercel.app/
+Try the live demo: [App demo](https://music-recc.vercel.app/)
 
 Landing Page
 <img width="1470" height="842" alt="Screenshot 2026-08-09 at 9 41 21 AM" src="https://github.com/user-attachments/assets/d26ea166-19ef-4736-8e0e-86fb49106fcc" />
