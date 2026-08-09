@@ -66,12 +66,13 @@ test("home screen renders recommendation workflow", async ({ page }) => {
   await expect(page.getByRole("button", { name: /build horizon playlist/i })).toBeVisible();
 
   await page.locator("#source").fill("test playlist");
+  await page.locator("#avoid").fill("drake");
   await page.getByRole("button", { name: /build horizon playlist/i }).click();
 
   expect(recommendationPayload).toEqual({
     source: "test playlist",
     range: "same vibe",
-    avoid: "",
+    avoid: "drake",
   });
   await expect(page.locator(".recommendation")).toHaveCount(1);
   await expect(page.getByText("new song")).toBeVisible();
