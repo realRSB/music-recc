@@ -6,7 +6,7 @@ Inner Horizons
 
 ## Product idea
 
-Inner Horizons is a Spotify-powered music discovery app. A user gives the app a Spotify playlist, a song, or a few quick taste inputs, and the app recommends songs and artists that match the same vibe while introducing them to new sounds.
+Inner Horizons is a Spotify-powered music discovery app. A user gives the app a Spotify playlist or song, chooses one of three discovery distances, and the app recommends songs and artists that match the same lane while introducing them to new sounds.
 
 The core promise:
 
@@ -26,10 +26,9 @@ The recommendations should include short explanations. Each explanation should t
    - paste or search for a Spotify song
    - optionally answer a quick taste quiz
 3. App analyzes the selected playlist or song.
-4. App asks only a few clarifying questions when useful.
-5. App returns recommended songs from new or less familiar artists.
-6. App explains each pick.
-7. App lets the user save the results as a Spotify playlist when they sign in.
+4. App returns recommended songs from new or less familiar artists.
+5. App explains each pick.
+6. App lets the user save the results as a Spotify playlist when they sign in.
 
 ## Authentication decision
 
@@ -91,14 +90,13 @@ Later versions can improve this with additional data sources, embeddings, LLM-as
 
 ## Quick taste inputs
 
-Keep onboarding short. Ask only questions that improve recommendations:
+Keep onboarding direct. Do not add mood or quiz-style inputs before results:
 
 - What song or playlist should we start from?
-- Do you want recommendations closer to familiar or more adventurous?
+- Choose one of three discovery distances: `same vibe`, `slightly new`, or `deep cut`.
 - Any genres, artists, or languages to avoid?
-- What mood should the final playlist lean toward?
 
-Use both structured options and free text. The app should not feel like a long quiz.
+Use the source and distance as the main signal. The app should feel like playlist/song in, results out.
 
 ## Result requirements
 
