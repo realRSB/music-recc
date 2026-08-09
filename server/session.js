@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 
 const SESSION_COOKIE = "inner_horizons_session";
 const ALGORITHM = "aes-256-gcm";
+const devSessionSecret = crypto.randomBytes(32).toString("hex");
 
 export function getSession(request) {
   const value = parseCookies(request.headers.cookie)[SESSION_COOKIE];
@@ -60,13 +61,13 @@ function decodeSession(value) {
 function getKey() {
   const secret = process.env.SESSION_SECRET;
 
-  if (!secret) {
+  if (!secret && process.env.NODE_ENV === "production") {
     const error = new Error("SESSION_SECRET is not configured");
     error.status = 500;
     throw error;
   }
 
-  return crypto.createHash("sha256").update(secret).digest();
+  return crypto.createHash("sha256").update(secret || devSessionSecret).digest();
 }
 
 function parseCookies(cookieHeader = "") {

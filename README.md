@@ -21,6 +21,14 @@ Inner Horizons recommends new songs from a Spotify playlist or track while keepi
    cp .env.example .env
    ```
 
+   Also set a session secret so Spotify login cookies can be encrypted:
+
+   ```bash
+   openssl rand -hex 32
+   ```
+
+   Put the generated value in `SESSION_SECRET`. Local development falls back to a temporary secret if this is missing, but production requires it.
+
 3. In the Spotify developer dashboard, add this redirect URI:
 
    ```text
