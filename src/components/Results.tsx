@@ -10,8 +10,6 @@ type ResultsProps = {
   onSave: () => void;
   error: string;
   savedPlaylist: SavedPlaylist | null;
-  avoid: string;
-  onChange: (patch: { avoid?: string }) => void;
 };
 
 function SkeletonRow() {
@@ -35,8 +33,6 @@ export default function Results({
   onSave,
   error,
   savedPlaylist,
-  avoid,
-  onChange,
 }: ResultsProps) {
   const tasteBits = result
     ? [
@@ -94,22 +90,6 @@ export default function Results({
             save to Spotify
           </button>
         </header>
-
-        <div className="mt-8">
-          <label htmlFor="avoid" className="block text-xs font-medium text-white/60 mb-2">
-            Anything to avoid?
-          </label>
-          <input
-            id="avoid"
-            name="avoid"
-            type="text"
-            autoComplete="off"
-            value={avoid}
-            onChange={(event) => onChange({ avoid: event.target.value })}
-            placeholder="Artists, genres, or words"
-            className="w-full bg-white/[0.04] border border-white/15 rounded-full px-4 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:border-[#e8702a] focus:ring-2 focus:ring-[#e8702a]/30 transition-colors"
-          />
-        </div>
 
         <p className="sr-only" role="status" aria-live="polite">
           {loading

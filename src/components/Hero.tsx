@@ -7,7 +7,8 @@ import type { UserPlaylist } from "../api/innerHorizons";
 type HeroProps = {
   source: string;
   range: string;
-  onChange: (patch: { source?: string; range?: string }) => void;
+  avoid: string;
+  onChange: (patch: { source?: string; range?: string; avoid?: string }) => void;
   onSubmit: (event: React.FormEvent) => void;
   loading: boolean;
   canGenerate: boolean;
@@ -18,6 +19,7 @@ type HeroProps = {
 export default function Hero({
   source,
   range,
+  avoid,
   onChange,
   onSubmit,
   loading,
@@ -123,6 +125,22 @@ export default function Hero({
             placeholder="Playlist link, track link, or song name"
             className="w-full bg-white/10 backdrop-blur-md border border-white/25 rounded-full px-5 py-3 text-sm text-white placeholder:text-white/50 outline-none focus:border-[#e8702a] focus:ring-2 focus:ring-[#e8702a]/40 transition-colors"
           />
+
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="avoid" className="text-xs font-medium text-white/60 tracking-wide">
+              Anything to avoid?
+            </label>
+            <input
+              id="avoid"
+              name="avoid"
+              type="text"
+              autoComplete="off"
+              value={avoid}
+              onChange={(event) => onChange({ avoid: event.target.value })}
+              placeholder="Artists, genres, or words"
+              className="w-full bg-white/10 backdrop-blur-md border border-white/20 rounded-full px-5 py-2.5 text-sm text-white placeholder:text-white/45 outline-none focus:border-[#e8702a] focus:ring-2 focus:ring-[#e8702a]/35 transition-colors"
+            />
+          </div>
 
           {/* Once you're signed in, your own playlists are the fastest source
               to start from — one click fills the field above. */}

@@ -183,6 +183,7 @@ export function App() {
       <Hero
         source={form.source}
         range={form.range}
+        avoid={form.avoid}
         onChange={update}
         onSubmit={generateRecommendations}
         loading={loading}
@@ -199,8 +200,6 @@ export function App() {
         onSave={savePlaylist}
         error={error}
         savedPlaylist={savedPlaylist}
-        avoid={form.avoid}
-        onChange={update}
       />
 
       <HowItWorks />
