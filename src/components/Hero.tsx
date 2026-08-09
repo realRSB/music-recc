@@ -45,6 +45,7 @@ export default function Hero({
   const [activeIndex, setActiveIndex] = useState(-1);
   const fieldRef = useRef<HTMLDivElement>(null);
   const suppressLookup = useRef(false);
+  const focused = useRef(false);
 
   /* Debounce the lookup so we're not firing a search request on every
      keystroke, and bail out entirely once the field already holds a link. */
@@ -66,7 +67,10 @@ export default function Hero({
     const timer = window.setTimeout(async () => {
       try {
         const { tracks } = await searchTracks(query);
-        if (cancelled) return;
+        /* The field may have lost focus while this request was in flight —
+           reopening the list at that point would fight whatever the user
+           moved on to (e.g. it clobbered the submit button in testing). */
+        if (cancelled || !focused.current) return;
         setSuggestions(tracks);
         setShowSuggestions(tracks.length > 0);
         setActiveIndex(-1);
@@ -216,8 +220,14 @@ export default function Hero({
               value={source}
               onChange={(event) => onChange({ source: event.target.value })}
               onKeyDown={onSourceKeyDown}
-              onFocus={() => setShowSuggestions(suggestions.length > 0)}
-              onBlur={() => setShowSuggestions(false)}
+              onFocus={() => {
+                focused.current = true;
+                setShowSuggestions(suggestions.length > 0);
+              }}
+              onBlur={() => {
+                focused.current = false;
+                setShowSuggestions(false);
+              }}
               placeholder="Playlist link, track link, or song name"
               className="w-full bg-white/10 backdrop-blur-md border border-white/25 rounded-full px-5 py-3 text-sm text-white placeholder:text-white/50 outline-none focus:border-[#e8702a] focus:ring-2 focus:ring-[#e8702a]/40 transition-colors"
             />

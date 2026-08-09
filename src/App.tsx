@@ -4,6 +4,7 @@ import Hero from "./components/Hero";
 import Results from "./components/Results";
 import HowItWorks from "./components/HowItWorks";
 import Method from "./components/Method";
+import FAQ from "./components/FAQ";
 import About from "./components/About";
 import AuthNotice from "./components/AuthNotice";
 import {
@@ -204,6 +205,7 @@ export function App() {
 
       <HowItWorks />
       <Method />
+      <FAQ />
       <About authenticated={config.authenticated} />
 
       <footer className="relative z-10 bg-black border-t border-white/10 px-5 sm:px-10 md:px-14 py-8">

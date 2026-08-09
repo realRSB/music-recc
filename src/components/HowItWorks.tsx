@@ -1,4 +1,4 @@
-import { ListMusic, Sparkles, Waypoints } from "lucide-react";
+import { Clock, ListMusic, MessageSquareText, Sparkles, Waypoints } from "lucide-react";
 
 /* Mirrors the primary user flow in docs.md. */
 const steps = [
@@ -16,6 +16,24 @@ const steps = [
     icon: Sparkles,
     title: "You get picks that argue for themselves",
     body: "Every track comes with a short note on why it fits and what makes it a step outward. Nothing already in your source, and we favour artists you haven't got yet.",
+  },
+];
+
+/* Weekly algorithmic mixes and one-song generators solve a narrower problem
+   than this one — worth naming plainly rather than assuming the difference
+   is obvious. */
+const contrasts = [
+  {
+    icon: Clock,
+    body: "Not a weekly drop. Any playlist or song, whenever you want a new one.",
+  },
+  {
+    icon: Waypoints,
+    body: "Not limited to your own listening history — start from anyone's public playlist.",
+  },
+  {
+    icon: MessageSquareText,
+    body: "Not a black box. Every pick says why it's there, so you can judge it yourself.",
   },
 ];
 
@@ -57,6 +75,15 @@ export default function HowItWorks() {
             </li>
           ))}
         </ol>
+
+        <ul className="mt-6 grid gap-3 sm:grid-cols-3">
+          {contrasts.map(({ icon: Icon, body }) => (
+            <li key={body} className="flex items-start gap-2.5 text-white/50 text-xs sm:text-sm leading-relaxed">
+              <Icon size={14} className="mt-0.5 shrink-0 text-white/30" aria-hidden="true" />
+              {body}
+            </li>
+          ))}
+        </ul>
       </div>
     </section>
   );

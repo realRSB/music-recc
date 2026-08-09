@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { LogOut, Menu } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { LogOut, Menu, X } from "lucide-react";
 import type { SpotifyUser } from "../api/innerHorizons";
 
 /* Only sections that actually exist on the page — no dead buttons. */
@@ -8,6 +8,7 @@ const links = [
   { label: "Results", href: "#results" },
   { label: "How it works", href: "#how" },
   { label: "Method", href: "#method" },
+  { label: "FAQ", href: "#faq" },
   { label: "About", href: "#about" },
 ];
 
@@ -22,6 +23,8 @@ export default function Nav({ authenticated, user, onLogout }: NavProps) {
      — otherwise track rows collide with the wordmark on the way past. */
   const [scrolled, setScrolled] = useState(false);
   const [active, setActive] = useState("#discover");
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
@@ -29,6 +32,28 @@ export default function Nav({ authenticated, user, onLogout }: NavProps) {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  /* The pill nav and connect button are desktop-only (md:flex/md:block), so
+     without this drawer mobile visitors would have no way to jump sections
+     or sign in at all — the hamburger button previously did nothing. */
+  useEffect(() => {
+    if (!menuOpen) return;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setMenuOpen(false);
+        menuButtonRef.current?.focus();
+      }
+    };
+
+    document.addEventListener("keydown", onKeyDown);
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = "";
+    };
+  }, [menuOpen]);
 
   /* Scroll spy. The top margin offsets the fixed nav so a section counts as
      current once it clears the bar, not when it touches the viewport edge. */
@@ -101,9 +126,64 @@ export default function Nav({ authenticated, user, onLogout }: NavProps) {
         </a>
       )}
 
-      <button className="md:hidden text-white p-2" aria-label="Open menu">
-        <Menu size={24} aria-hidden="true" />
+      <button
+        ref={menuButtonRef}
+        type="button"
+        onClick={() => setMenuOpen((open) => !open)}
+        aria-label={menuOpen ? "Close menu" : "Open menu"}
+        aria-expanded={menuOpen}
+        aria-controls="mobile-menu"
+        className="md:hidden text-white p-2"
+      >
+        {menuOpen ? <X size={24} aria-hidden="true" /> : <Menu size={24} aria-hidden="true" />}
       </button>
+
+      {menuOpen ? (
+        <div
+          id="mobile-menu"
+          className="md:hidden absolute top-full left-0 right-0 mt-2 mx-4 rounded-2xl border border-white/15 bg-black/95 backdrop-blur-xl shadow-lg shadow-black/50 p-3"
+        >
+          <ul className="flex flex-col">
+            {links.map(({ label, href }) => (
+              <li key={href}>
+                <a
+                  href={href}
+                  onClick={() => setMenuOpen(false)}
+                  aria-current={active === href ? "true" : undefined}
+                  className={`block px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
+                    active === href ? "text-white bg-white/10" : "text-white/80 hover:bg-white/10 hover:text-white"
+                  }`}
+                >
+                  {label}
+                </a>
+              </li>
+            ))}
+          </ul>
+
+          <div className="mt-1 border-t border-white/10 pt-3">
+            {authenticated ? (
+              <button
+                onClick={() => {
+                  setMenuOpen(false);
+                  onLogout();
+                }}
+                className="flex w-full items-center justify-center gap-2 bg-white text-gray-900 text-sm font-semibold px-6 py-3 rounded-full hover:bg-gray-100"
+              >
+                <LogOut size={15} aria-hidden="true" />
+                {user?.displayName || "disconnect"}
+              </button>
+            ) : (
+              <a
+                href="/auth/spotify"
+                onClick={() => setMenuOpen(false)}
+                className="block text-center bg-white text-gray-900 text-sm font-semibold px-6 py-3 rounded-full hover:bg-gray-100"
+              >
+                connect Spotify
+              </a>
+            )}
+          </div>
+        </div>
+      ) : null}
     </nav>
   );
 }
