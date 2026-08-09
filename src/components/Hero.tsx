@@ -1,8 +1,16 @@
 import { useEffect, useRef, useState } from "react";
-import { ArrowRight, ListMusic, Loader2 } from "lucide-react";
+import { ArrowRight, ListMusic, Loader2, Music } from "lucide-react";
 import RevealLayer from "./RevealLayer";
 import { BG_IMAGE_1, BG_IMAGE_2, RANGES } from "../constants";
-import type { UserPlaylist } from "../api/innerHorizons";
+import { searchTracks } from "../api/innerHorizons";
+import type { SearchTrack, UserPlaylist } from "../api/innerHorizons";
+
+/* Playlist/track links and URIs already point at something exact — only
+   free-text (a typed song name, possibly misspelled) benefits from
+   suggestions, so skip the lookup once the field already looks like one. */
+function looksLikeSpotifyLink(value: string) {
+  return /^(https?:\/\/open\.spotify\.com\/|spotify:)/i.test(value.trim());
+}
 
 type HeroProps = {
   source: string;
@@ -31,6 +39,85 @@ export default function Hero({
   const smooth = useRef({ x: -999, y: -999 });
   const rafRef = useRef<number>(0);
   const [cursorPos, setCursorPos] = useState({ x: -999, y: -999 });
+
+  const [suggestions, setSuggestions] = useState<SearchTrack[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(-1);
+  const fieldRef = useRef<HTMLDivElement>(null);
+  const suppressLookup = useRef(false);
+
+  /* Debounce the lookup so we're not firing a search request on every
+     keystroke, and bail out entirely once the field already holds a link. */
+  useEffect(() => {
+    if (suppressLookup.current) {
+      suppressLookup.current = false;
+      return;
+    }
+
+    const query = source.trim();
+
+    if (query.length < 2 || looksLikeSpotifyLink(query)) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    let cancelled = false;
+    const timer = window.setTimeout(async () => {
+      try {
+        const { tracks } = await searchTracks(query);
+        if (cancelled) return;
+        setSuggestions(tracks);
+        setShowSuggestions(tracks.length > 0);
+        setActiveIndex(-1);
+      } catch {
+        if (cancelled) return;
+        setSuggestions([]);
+        setShowSuggestions(false);
+      }
+    }, 300);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [source]);
+
+  useEffect(() => {
+    const onClickOutside = (event: MouseEvent) => {
+      if (!fieldRef.current?.contains(event.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, []);
+
+  function pickSuggestion(track: SearchTrack) {
+    suppressLookup.current = true;
+    onChange({ source: track.url || `${track.title} ${track.artist}` });
+    setSuggestions([]);
+    setShowSuggestions(false);
+    setActiveIndex(-1);
+  }
+
+  function onSourceKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
+    if (!showSuggestions || suggestions.length === 0) return;
+
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      setActiveIndex((current) => (current + 1) % suggestions.length);
+    } else if (event.key === "ArrowUp") {
+      event.preventDefault();
+      setActiveIndex((current) => (current <= 0 ? suggestions.length - 1 : current - 1));
+    } else if (event.key === "Enter" && activeIndex >= 0) {
+      event.preventDefault();
+      pickSuggestion(suggestions[activeIndex]);
+    } else if (event.key === "Escape") {
+      setShowSuggestions(false);
+    }
+  }
 
   useEffect(() => {
     const onMove = (event: MouseEvent) => {
@@ -114,17 +201,71 @@ export default function Hero({
             Start from a playlist or song
           </label>
 
-          <input
-            id="source"
-            name="source"
-            type="text"
-            autoComplete="off"
-            spellCheck={false}
-            value={source}
-            onChange={(event) => onChange({ source: event.target.value })}
-            placeholder="Playlist link, track link, or song name"
-            className="w-full bg-white/10 backdrop-blur-md border border-white/25 rounded-full px-5 py-3 text-sm text-white placeholder:text-white/50 outline-none focus:border-[#e8702a] focus:ring-2 focus:ring-[#e8702a]/40 transition-colors"
-          />
+          <div ref={fieldRef} className="relative w-full">
+            <input
+              id="source"
+              name="source"
+              type="text"
+              autoComplete="off"
+              spellCheck={false}
+              role="combobox"
+              aria-expanded={showSuggestions}
+              aria-controls="source-suggestions"
+              aria-autocomplete="list"
+              aria-activedescendant={activeIndex >= 0 ? `source-suggestion-${activeIndex}` : undefined}
+              value={source}
+              onChange={(event) => onChange({ source: event.target.value })}
+              onKeyDown={onSourceKeyDown}
+              onFocus={() => setShowSuggestions(suggestions.length > 0)}
+              placeholder="Playlist link, track link, or song name"
+              className="w-full bg-white/10 backdrop-blur-md border border-white/25 rounded-full px-5 py-3 text-sm text-white placeholder:text-white/50 outline-none focus:border-[#e8702a] focus:ring-2 focus:ring-[#e8702a]/40 transition-colors"
+            />
+
+            {/* Typing a song name is easy to fumble — a misspelled artist,
+                the wrong "feat." order — so surface real matches to click
+                instead of hoping search finds it later. */}
+            {showSuggestions ? (
+              <ul
+                id="source-suggestions"
+                role="listbox"
+                aria-label="Matching tracks"
+                className="absolute left-0 right-0 top-[calc(100%+6px)] max-h-64 overflow-y-auto rounded-2xl border border-white/15 bg-black/90 backdrop-blur-xl shadow-lg shadow-black/50 z-10"
+              >
+                {suggestions.map((track, index) => (
+                  <li key={track.id} role="presentation">
+                    <button
+                      id={`source-suggestion-${index}`}
+                      type="button"
+                      role="option"
+                      aria-selected={index === activeIndex}
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => pickSuggestion(track)}
+                      onMouseEnter={() => setActiveIndex(index)}
+                      className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${
+                        index === activeIndex ? "bg-white/15" : "hover:bg-white/10"
+                      }`}
+                    >
+                      {track.artwork ? (
+                        <img
+                          src={track.artwork}
+                          alt=""
+                          className="w-8 h-8 rounded-md object-cover shrink-0"
+                        />
+                      ) : (
+                        <span className="w-8 h-8 rounded-md bg-white/10 grid place-items-center shrink-0">
+                          <Music size={14} aria-hidden="true" className="text-white/50" />
+                        </span>
+                      )}
+                      <span className="min-w-0">
+                        <span className="block text-sm text-white truncate">{track.title}</span>
+                        <span className="block text-xs text-white/50 truncate">{track.artist}</span>
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
 
           <div className="flex flex-col gap-1.5">
             <label htmlFor="avoid" className="text-xs font-medium text-white/60 tracking-wide">

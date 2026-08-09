@@ -17,6 +17,10 @@ export function getPlaylists() {
   return fetchJson("/api/playlists");
 }
 
+export function searchTracks(query) {
+  return fetchJson(`/api/search?q=${encodeURIComponent(query)}`);
+}
+
 export function savePlaylist(payload) {
   return fetchJson("/api/playlists", {
     method: "POST",

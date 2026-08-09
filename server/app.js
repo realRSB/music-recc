@@ -8,11 +8,13 @@ import {
   addTracksToPlaylist,
   createPlaylist,
   exchangeCodeForTokens,
+  getAppAccessToken,
   getCurrentUser,
   getCurrentUserPlaylists,
   getSpotifyAuthUrl,
   getUserAccessToken,
   isSpotifyConfigured,
+  searchTracks,
 } from "./spotify.js";
 
 const isProduction = process.env.NODE_ENV === "production";
@@ -67,6 +69,41 @@ app.get("/api/me", async (request, response) => {
       return;
     }
 
+    sendError(response, error);
+  }
+});
+
+app.get("/api/search", async (request, response) => {
+  try {
+    const query = String(request.query.q || "").trim();
+
+    if (!query) {
+      response.json({ tracks: [] });
+      return;
+    }
+
+    if (!isSpotifyConfigured()) {
+      response.json({ tracks: [] });
+      return;
+    }
+
+    const session = getSession(request);
+    const accessToken = session
+      ? await resolveAccessToken(request, response, session)
+      : await getAppAccessToken();
+    const tracks = await searchTracks(query, accessToken, 6);
+
+    response.json({
+      tracks: tracks.map((track) => ({
+        id: track.id,
+        title: track.name,
+        artist: track.artists?.[0]?.name || "unknown artist",
+        album: track.album?.name,
+        artwork: track.album?.images?.[track.album.images.length - 1]?.url,
+        url: track.external_urls?.spotify,
+      })),
+    });
+  } catch (error) {
     sendError(response, error);
   }
 });

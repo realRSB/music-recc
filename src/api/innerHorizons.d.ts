@@ -68,10 +68,20 @@ export interface UserPlaylist {
   image?: string;
 }
 
+export interface SearchTrack {
+  id: string;
+  title: string;
+  artist: string;
+  album?: string;
+  artwork?: string;
+  url: string;
+}
+
 export function getConfig(): Promise<SpotifyConfig>;
 export function getMe(): Promise<MeResponse>;
 export function getRecommendations(payload: RecommendationRequest): Promise<RecommendationResult>;
 export function getPlaylists(): Promise<{ playlists: UserPlaylist[] }>;
+export function searchTracks(query: string): Promise<{ tracks: SearchTrack[] }>;
 export function savePlaylist(payload: {
   name: string;
   description: string;
