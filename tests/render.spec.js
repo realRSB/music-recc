@@ -28,6 +28,13 @@ test("home screen renders recommendation workflow", async ({ page }) => {
     });
   });
 
+  await page.route("**/api/search**", (route) => {
+    route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ tracks: [] }),
+    });
+  });
+
   await page.route("**/api/recommendations", async (route) => {
     recommendationPayload = route.request().postDataJSON();
     await new Promise((resolve) => setTimeout(resolve, 300));
@@ -128,4 +135,24 @@ test("authenticated users can pick one of their playlists", async ({ page }) => 
   await expect(page.getByRole("button", { name: /car songs/i })).toBeVisible();
   await page.getByRole("button", { name: /car songs/i }).click();
   await expect(page.locator("#source")).toHaveValue("https://open.spotify.com/playlist/playlist-1");
+});
+
+test("demo route shows recommendations without Spotify API calls", async ({ page }) => {
+  const apiRequests = [];
+
+  page.on("request", (request) => {
+    if (new URL(request.url()).pathname.startsWith("/api/")) {
+      apiRequests.push(request.url());
+    }
+  });
+
+  await page.goto("http://127.0.0.1:5173/demo", { waitUntil: "networkidle" });
+
+  await expect(page.locator("#results")).toBeInViewport();
+  await expect(
+    page.getByRole("heading", { name: /Inner Horizons: after midnight city playlist/i }),
+  ).toBeVisible();
+  await expect(page.locator(".recommendation")).toHaveCount(6);
+  await expect(page.getByText("Space Song")).toBeVisible();
+  expect(apiRequests).toEqual([]);
 });
