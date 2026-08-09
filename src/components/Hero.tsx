@@ -22,6 +22,7 @@ type HeroProps = {
   canGenerate: boolean;
   spotifyConfigured: boolean;
   playlists: UserPlaylist[];
+  searchEnabled?: boolean;
 };
 
 export default function Hero({
@@ -34,6 +35,7 @@ export default function Hero({
   canGenerate,
   spotifyConfigured,
   playlists,
+  searchEnabled = true,
 }: HeroProps) {
   const mouse = useRef({ x: -999, y: -999 });
   const smooth = useRef({ x: -999, y: -999 });
@@ -50,6 +52,12 @@ export default function Hero({
   /* Debounce the lookup so we're not firing a search request on every
      keystroke, and bail out entirely once the field already holds a link. */
   useEffect(() => {
+    if (!searchEnabled) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
     if (suppressLookup.current) {
       suppressLookup.current = false;
       return;
@@ -85,7 +93,7 @@ export default function Hero({
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [source]);
+  }, [source, searchEnabled]);
 
   useEffect(() => {
     const onClickOutside = (event: MouseEvent) => {

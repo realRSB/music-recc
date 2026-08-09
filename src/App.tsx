@@ -7,6 +7,7 @@ import Method from "./components/Method";
 import FAQ from "./components/FAQ";
 import About from "./components/About";
 import AuthNotice from "./components/AuthNotice";
+import { DEMO_RESULT, DEMO_SOURCE } from "./demoData";
 import {
   getConfig,
   getMe,
@@ -49,24 +50,32 @@ function friendlyAuthError(raw: string) {
 }
 
 export function App() {
+  const isDemoPage = window.location.pathname === "/demo";
   const [config, setConfig] = useState<SpotifyConfig>({
-    spotifyConfigured: false,
+    spotifyConfigured: isDemoPage,
     authenticated: false,
   });
   const [user, setUser] = useState<SpotifyUser | null>(null);
   const [playlists, setPlaylists] = useState<UserPlaylist[]>([]);
   const [form, setForm] = useState({
-    source: "",
+    source: isDemoPage ? DEMO_SOURCE : "",
     range: "same vibe",
     avoid: "",
   });
-  const [result, setResult] = useState<RecommendationResult | null>(null);
+  const [result, setResult] = useState<RecommendationResult | null>(
+    isDemoPage ? DEMO_RESULT : null,
+  );
   const [savedPlaylist, setSavedPlaylist] = useState<SavedPlaylist | null>(null);
   const [status, setStatus] = useState<"idle" | "loading" | "saving">("idle");
   const [error, setError] = useState("");
   const [authNotice, setAuthNotice] = useState("");
 
   useEffect(() => {
+    if (isDemoPage) {
+      scrollToResults();
+      return;
+    }
+
     loadSession();
   }, []);
 
@@ -201,6 +210,7 @@ export function App() {
         canGenerate={canGenerate}
         spotifyConfigured={config.spotifyConfigured}
         playlists={playlists}
+        searchEnabled={!isDemoPage}
       />
 
       <Results
