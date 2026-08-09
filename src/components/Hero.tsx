@@ -217,6 +217,7 @@ export default function Hero({
               onChange={(event) => onChange({ source: event.target.value })}
               onKeyDown={onSourceKeyDown}
               onFocus={() => setShowSuggestions(suggestions.length > 0)}
+              onBlur={() => setShowSuggestions(false)}
               placeholder="Playlist link, track link, or song name"
               className="w-full bg-white/10 backdrop-blur-md border border-white/25 rounded-full px-5 py-3 text-sm text-white placeholder:text-white/50 outline-none focus:border-[#e8702a] focus:ring-2 focus:ring-[#e8702a]/40 transition-colors"
             />
