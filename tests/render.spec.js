@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 
 test("home screen renders recommendation workflow", async ({ page }) => {
   const browserErrors = [];
+  let recommendationPayload = null;
 
   page.on("console", (message) => {
     if (message.type() === "error") {
@@ -28,6 +29,7 @@ test("home screen renders recommendation workflow", async ({ page }) => {
   });
 
   await page.route("**/api/recommendations", (route) => {
+    recommendationPayload = route.request().postDataJSON();
     route.fulfill({
       contentType: "application/json",
       body: JSON.stringify({
@@ -66,6 +68,11 @@ test("home screen renders recommendation workflow", async ({ page }) => {
   await page.locator("#source").fill("test playlist");
   await page.getByRole("button", { name: /build horizon playlist/i }).click();
 
+  expect(recommendationPayload).toEqual({
+    source: "test playlist",
+    range: "same vibe",
+    avoid: "",
+  });
   await expect(page.locator(".recommendation")).toHaveCount(1);
   await expect(page.getByText("new song")).toBeVisible();
   await expect(page.getByText("indie pop lane", { exact: true })).toBeVisible();
