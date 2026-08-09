@@ -73,7 +73,7 @@ app.get("/api/me", async (request, response) => {
 
 app.post("/api/recommendations", async (request, response) => {
   try {
-    const { source, range = "same vibe", mood = "open road", avoid = "" } = request.body || {};
+    const { source, range = "same vibe", avoid = "" } = request.body || {};
 
     if (!source?.trim()) {
       response.status(400).json({ error: "playlist link or song is required" });
@@ -82,7 +82,7 @@ app.post("/api/recommendations", async (request, response) => {
 
     const session = getSession(request);
     const userAccessToken = session ? await resolveAccessToken(request, response, session) : null;
-    const result = await buildRecommendations({ source, range, mood, avoid }, userAccessToken);
+    const result = await buildRecommendations({ source, range, avoid }, userAccessToken);
 
     response.json(result);
   } catch (error) {
