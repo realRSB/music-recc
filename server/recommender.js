@@ -79,6 +79,7 @@ export async function buildRecommendations({ source, range, avoid }, userAccessT
   const artists = await getSeveralArtists(artistIds, accessToken);
   const taste = buildTasteProfile(profile, artists);
   const candidates = await collectCandidates(taste, { range, avoid }, accessToken);
+  const sourceTrackKeys = buildTrackIdentitySet(profile.tracks);
   const candidateArtistIds =
     taste.genreSource === "spotify"
       ? candidates.flatMap(({ track }) => (track.artists || []).map((artist) => artist.id))
@@ -87,7 +88,13 @@ export async function buildRecommendations({ source, range, avoid }, userAccessT
     ? await getSeveralArtists(candidateArtistIds, accessToken)
     : [];
   const candidateArtistById = new Map(candidateArtists.map((artist) => [artist.id, artist]));
-  const recommendations = rankCandidates(candidates, taste, { range, avoid }, candidateArtistById).slice(0, 20);
+  const recommendations = rankCandidates(
+    candidates,
+    taste,
+    { range, avoid },
+    candidateArtistById,
+    sourceTrackKeys,
+  ).slice(0, 20);
 
   return {
     source: profile.source,
@@ -211,21 +218,20 @@ async function collectCandidates(taste, preferences, accessToken) {
   return searches.flat();
 }
 
-function rankCandidates(candidates, taste, preferences, candidateArtistById) {
-  const seen = new Set();
+function rankCandidates(candidates, taste, preferences, candidateArtistById, sourceTrackKeys = new Set()) {
   const sourceArtists = new Set(taste.sourceArtistIds);
-  const sourceTracks = new Set(taste.sourceTrackIds);
   const avoid = normalizeAvoid(preferences.avoid);
   const [minPopularity, maxPopularity] = RANGE_POPULARITY[preferences.range] || RANGE_POPULARITY["same vibe"];
   const sourceGenreNames = new Set(taste.topGenres.map(({ name }) => name.toLowerCase()));
+  const seenRecommendationKeys = new Set();
+  const artistCounts = new Map();
 
   return candidates
     .filter(({ track }) => {
-      if (!track?.id || seen.has(track.id) || sourceTracks.has(track.id) || isLowQualityCandidate(track)) {
+      if (!track?.id || isLowQualityCandidate(track) || isKnownTrack(track, sourceTrackKeys)) {
         return false;
       }
 
-      seen.add(track.id);
       const haystack = `${track.name} ${(track.artists || []).map((artist) => artist.name).join(" ")}`.toLowerCase();
       const sourceArtistMatch = (track.artists || []).some((artist) => sourceArtists.has(artist.id));
 
@@ -243,9 +249,15 @@ function rankCandidates(candidates, taste, preferences, candidateArtistById) {
         genreOverlap * 18 +
         getLaneBonus(lane, preferences.range);
 
-      return formatRecommendation(track, { score, taste, candidateGenres, query, lane });
+      return {
+        track,
+        recommendation: formatRecommendation(track, { score, taste, candidateGenres, query, lane }),
+      };
     })
-    .sort((a, b) => b.score - a.score);
+    .sort((a, b) => b.recommendation.score - a.recommendation.score)
+    .filter(({ track }) => rememberTrack(track, seenRecommendationKeys))
+    .filter(({ track }) => rememberPrimaryArtist(track, artistCounts))
+    .map(({ recommendation }) => recommendation);
 }
 
 function formatRecommendation(track, { score, taste, candidateGenres, query, lane }) {
@@ -436,6 +448,89 @@ function isLowQualityCandidate(track) {
   return blockedTerms.some((term) => combined.includes(term)) || genericGenreTitle;
 }
 
+function buildTrackIdentitySet(tracks) {
+  const identities = new Set();
+
+  for (const track of tracks) {
+    for (const key of getTrackIdentityKeys(track)) {
+      identities.add(key);
+    }
+  }
+
+  return identities;
+}
+
+function isKnownTrack(track, knownKeys) {
+  return getTrackIdentityKeys(track).some((key) => knownKeys.has(key));
+}
+
+function rememberTrack(track, seen) {
+  const keys = getTrackIdentityKeys(track);
+
+  if (keys.some((key) => seen.has(key))) {
+    return false;
+  }
+
+  keys.forEach((key) => seen.add(key));
+  return true;
+}
+
+function rememberPrimaryArtist(track, counts, maxPerArtist = 2) {
+  const artistKey = normalizeIdentityText(track?.artists?.[0]?.name);
+
+  if (!artistKey) {
+    return true;
+  }
+
+  const count = counts.get(artistKey) || 0;
+
+  if (count >= maxPerArtist) {
+    return false;
+  }
+
+  counts.set(artistKey, count + 1);
+  return true;
+}
+
+function getTrackIdentityKeys(track) {
+  const keys = [];
+  const trackId = normalizeIdentityPart(track?.id);
+  const linkedTrackId = normalizeIdentityPart(track?.linked_from?.id);
+  const isrc = normalizeIdentityPart(track?.external_ids?.isrc);
+  const title = normalizeTrackTitle(track?.name);
+  const primaryArtist = normalizeIdentityText(track?.artists?.[0]?.name);
+
+  if (trackId) keys.push(`id:${trackId}`);
+  if (linkedTrackId) keys.push(`id:${linkedTrackId}`);
+  if (isrc) keys.push(`isrc:${isrc}`);
+  if (title && primaryArtist) keys.push(`song:${title}:${primaryArtist}`);
+
+  return [...new Set(keys)];
+}
+
+function normalizeTrackTitle(value) {
+  return normalizeIdentityText(value)
+    .replace(/\b(feat|ft|featuring|with)\b.+$/i, "")
+    .replace(/\b(remaster|remastered|radio edit|single version|album version|explicit|clean)\b/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function normalizeIdentityText(value) {
+  return String(value || "")
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function normalizeIdentityPart(value) {
+  return normalizeIdentityText(value).replace(/\s+/g, "");
+}
+
 function parseSpotifyId(value, type) {
   const input = String(value || "").trim();
 
@@ -482,3 +577,9 @@ function uniqueBy(items, keyForItem) {
 
   return unique;
 }
+
+export const __testing = {
+  buildTrackIdentitySet,
+  getTrackIdentityKeys,
+  rankCandidates,
+};

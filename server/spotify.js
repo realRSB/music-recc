@@ -155,7 +155,7 @@ export async function getPlaylistTracks(playlistId, accessToken) {
         limit: 50,
         offset,
         fields:
-          "next,items(track(id,name,uri,popularity,external_urls,album(name,images,release_date),artists(id,name,external_urls)))",
+          "next,items(track(id,name,uri,popularity,external_ids(isrc),linked_from(id),external_urls,album(name,images,release_date),artists(id,name,external_urls)))",
       },
     });
 
