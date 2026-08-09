@@ -40,12 +40,18 @@ export default function Results({
         result.taste?.topArtists?.[0]?.name ? `${result.taste.topArtists[0].name} anchor` : null,
       ].filter(Boolean)
     : [];
+  const title = loading
+    ? "Building your horizon playlist"
+    : result
+      ? result.playlist.name
+      : "Your horizon playlist";
 
   return (
     /* Top padding and scroll-margin both clear the fixed nav, which floats
        over this section once you scroll past the hero. */
     <section
       id="results"
+      aria-busy={loading}
       className="relative z-10 bg-black px-5 sm:px-10 md:px-14 pt-28 pb-16 sm:pt-36 sm:pb-24 scroll-mt-24"
     >
       <div className="mx-auto max-w-3xl">
@@ -55,7 +61,7 @@ export default function Results({
               className="text-white font-playfair italic text-3xl sm:text-4xl"
               style={{ letterSpacing: "-0.03em" }}
             >
-              {result ? result.playlist.name : "Your horizon playlist"}
+              {title}
             </h2>
 
             <div className="mt-3 flex flex-wrap gap-2">
@@ -96,6 +102,21 @@ export default function Results({
             ? "Building your playlist"
             : `${result?.recommendations.length ?? 0} recommendations ready`}
         </p>
+
+        {loading ? (
+          <div className="mt-8 flex items-start gap-4 rounded-2xl border border-[#e8702a]/35 bg-[#e8702a]/10 px-4 py-4 text-white shadow-lg shadow-[#e8702a]/10">
+            <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#e8702a]/20 text-[#ffb27f]">
+              <Loader2 size={18} aria-hidden="true" className="animate-spin" />
+            </span>
+            <div>
+              <p className="text-sm font-semibold">working on it</p>
+              <p className="mt-1 text-sm leading-relaxed text-white/65">
+                Reading your source, checking genre clues, and lining up tracks that keep the vibe
+                while moving past the obvious picks.
+              </p>
+            </div>
+          </div>
+        ) : null}
 
         {error ? (
           <p

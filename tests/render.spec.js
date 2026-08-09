@@ -28,8 +28,9 @@ test("home screen renders recommendation workflow", async ({ page }) => {
     });
   });
 
-  await page.route("**/api/recommendations", (route) => {
+  await page.route("**/api/recommendations", async (route) => {
     recommendationPayload = route.request().postDataJSON();
+    await new Promise((resolve) => setTimeout(resolve, 300));
     route.fulfill({
       contentType: "application/json",
       body: JSON.stringify({
@@ -68,6 +69,8 @@ test("home screen renders recommendation workflow", async ({ page }) => {
   await page.locator("#source").fill("test playlist");
   await page.locator("#avoid").fill("drake");
   await page.getByRole("button", { name: /build horizon playlist/i }).click();
+  await expect(page.locator("#results")).toBeInViewport();
+  await expect(page.getByRole("heading", { name: /building your horizon playlist/i })).toBeVisible();
 
   expect(recommendationPayload).toEqual({
     source: "test playlist",

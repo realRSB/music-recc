@@ -92,6 +92,15 @@ export function App() {
   const canGenerate = config.spotifyConfigured && form.source.trim() !== "" && !loading;
   const canSave = Boolean(config.authenticated && result?.recommendations?.length && !saving);
 
+  function scrollToResults() {
+    window.requestAnimationFrame(() => {
+      document.getElementById("results")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+  }
+
   async function loadSession() {
     try {
       const [configResponse, meResponse] = await Promise.all([getConfig(), getMe()]);
@@ -126,6 +135,7 @@ export function App() {
     setStatus("loading");
     setError("");
     setSavedPlaylist(null);
+    scrollToResults();
 
     try {
       setResult(await getRecommendations(form));
