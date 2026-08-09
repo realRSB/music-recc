@@ -1,5 +1,7 @@
 const API_BASE = "https://api.spotify.com/v1";
 const ACCOUNTS_BASE = "https://accounts.spotify.com";
+const MAX_RATE_LIMIT_RETRIES = 2;
+const MAX_RETRY_AFTER_SECONDS = 3;
 const USER_SCOPES = [
   "playlist-read-private",
   "playlist-read-collaborative",
@@ -120,17 +122,24 @@ export async function getTrack(trackId, accessToken) {
 }
 
 export async function getSeveralArtists(artistIds, accessToken) {
-  const ids = [...new Set(artistIds)].filter(Boolean).slice(0, 50);
+  const ids = [...new Set(artistIds)].filter(Boolean);
 
   if (!ids.length) {
     return [];
   }
 
-  const artists = await Promise.all(
-    ids.map((id) => spotifyRequest(`/artists/${id}`, { accessToken }).catch(() => null)),
-  );
+  const artists = [];
 
-  return artists.filter(Boolean);
+  for (const chunk of chunkItems(ids, 50)) {
+    const page = await spotifyRequest("/artists", {
+      accessToken,
+      query: { ids: chunk.join(",") },
+    });
+
+    artists.push(...(page.artists || []).filter(Boolean));
+  }
+
+  return artists;
 }
 
 export async function getPlaylist(playlistId, accessToken) {
@@ -231,16 +240,27 @@ async function spotifyRequest(path, { method = "GET", accessToken, query, body }
     url.searchParams.set(key, value);
   });
 
-  const response = await fetch(url, {
-    method,
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      ...(body ? { "Content-Type": "application/json" } : {}),
-    },
-    body: body ? JSON.stringify(body) : undefined,
-  });
+  for (let attempt = 0; attempt <= MAX_RATE_LIMIT_RETRIES; attempt += 1) {
+    const response = await fetch(url, {
+      method,
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        ...(body ? { "Content-Type": "application/json" } : {}),
+      },
+      body: body ? JSON.stringify(body) : undefined,
+    });
 
-  return parseSpotifyResponse(response);
+    if (response.status === 429 && attempt < MAX_RATE_LIMIT_RETRIES) {
+      const retryAfter = getRetryAfterSeconds(response);
+
+      if (retryAfter <= MAX_RETRY_AFTER_SECONDS) {
+        await sleep(retryAfter * 1000);
+        continue;
+      }
+    }
+
+    return parseSpotifyResponse(response);
+  }
 }
 
 async function parseSpotifyResponse(response) {
@@ -248,18 +268,30 @@ async function parseSpotifyResponse(response) {
   const data = parseResponseBody(text);
 
   if (!response.ok) {
-    const message =
-      data.error?.message ||
-      data.error_description ||
-      data.message ||
-      data.text ||
-      "spotify request failed";
+    const retryAfter = response.status === 429 ? getRetryAfterSeconds(response) : null;
+    const message = retryAfter
+      ? `Spotify is rate limiting requests. Try again in ${retryAfter} seconds.`
+      : data.error?.message ||
+        data.error_description ||
+        data.message ||
+        data.text ||
+        "spotify request failed";
     const error = new Error(message);
     error.status = response.status;
+    error.retryAfter = retryAfter;
     throw error;
   }
 
   return data;
+}
+
+function getRetryAfterSeconds(response) {
+  const retryAfter = Number(response.headers.get("retry-after"));
+  return Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter : 1;
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function parseResponseBody(text) {
@@ -309,4 +341,14 @@ function requireSpotifyConfig() {
     error.status = 503;
     throw error;
   }
+}
+
+function chunkItems(items, size) {
+  const chunks = [];
+
+  for (let index = 0; index < items.length; index += size) {
+    chunks.push(items.slice(index, index + size));
+  }
+
+  return chunks;
 }

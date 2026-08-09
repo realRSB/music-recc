@@ -231,8 +231,13 @@ async function resolveAccessToken(request, response, session) {
 }
 
 function sendError(response, error) {
+  if (error.retryAfter) {
+    response.set("Retry-After", String(error.retryAfter));
+  }
+
   response.status(error.status || 500).json({
     error: error.message || "server error",
+    ...(error.retryAfter ? { retryAfter: error.retryAfter } : {}),
   });
 }
 
